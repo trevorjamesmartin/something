@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# requires ['grep', 'xargs', 'awk', 'sed']
+
+if [[ ! -v DB_ENVIRONMENT ]]; then
+    echo 'DB_ENVIRONMENT undefined, development settings selected.'
+    DB_CONF="development"
+elif [[ -z "$DB_ENVIRONMENT" ]]; then
+    echo 'DB_ENVIRONMENT empty, development settings selected.'
+    DB_CONF="development"
+else
+    echo "DB_ENVIRONMENT = $DB_ENVIRONMENT"
+    DB_CONF="$DB_ENVIRONMENT"
+fi
+
+if [ "$DB_CONF" == "development" ]; then
+    
+    DB_FILE=`grep "$DB_CONF" -C 7 api/knexfile.js | grep filename | xargs -- | awk '{print $2}'| grep -Po '^.{3}\K.*' | sed s/.$//`
+
+    # grep(1) reads knexfile.js looking for the line with "development" returning 7 lines,
+    #           
+    # grep(2) scans them for the line with "filename"
+    #
+    # xargs appends the result to the next command
+    # ("result next_command" becomes "next_command result")
+    #
+    # awk selects the 2nd column of text
+    #
+    # grep(3) removes the first 3 characters
+    #
+    # sed removes the trailing comma
+
+
+    if [ ! -f "$DB_FILE" ]; then
+        echo "Creating a new database at $DB_FILE"
+        cd api && npx knex migrate:latest && npx knex seed:run
+        cd ..
+    else
+        echo "Database: $DB_FILE"
+    fi
+fi
+
+cd /app/api && node index.js

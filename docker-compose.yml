@@ -1,0 +1,8 @@
+services:
+  web:
+    image: something-webbed
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app/mnt

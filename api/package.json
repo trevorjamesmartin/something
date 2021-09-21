@@ -1,0 +1,24 @@
+{
+  "name": "something-api",
+  "version": "1.0.0",
+  "description": "access the something database",
+  "main": "index.js",
+  "scripts": {
+    "start": "npm run develop",
+    "develop": "npx nodemon",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "trevor.j.martin@gmail.com",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "helmet": "^4.6.0",
+    "knex": "^0.95.11",
+    "pg": "^8.7.1",
+    "sqlite3": "^5.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.12"
+  }
+}

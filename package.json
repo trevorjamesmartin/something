@@ -1,0 +1,29 @@
+{
+  "name": "something",
+  "version": "1.0.0",
+  "description": "keeping track of things",
+  "main": "index.js",
+  "scripts": {
+    "install-api": "cd api && npm install",
+    "install-client": "cd client && npm install",
+    "postinstall": "npx concurrently \"npm run install-api\" \"npm run install-client\"",
+    "start-api": "cd api && npm start",
+    "start-client": "cd client && npm start",
+    "predevelop": "npm install",
+    "develop": "npx concurrently \"npm run start-api\" \"npm run start-client\"",
+    "start": "npm run develop",
+    "create-db": "cd api && npx knex migrate:latest && npx knex seed:run",
+    "remove-db": "rm mnt/something.db",
+    "clean-api": "cd api && rm -rf node_modules && rm -rf public/*",
+    "clean-client": "cd client && rm -rf node_modules && rm -rf build",
+    "clean": "npm run clean-api && npm run clean-client && rm -rf node_modules",
+    "first-run": "npm install && npm run create-db && npm start",
+    "build": "rm -rf api/public && cd client && npm install && npm run-script build && cd .. && mv client/build api/public && mv api/public/index.html api/public/something-else.html",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "trevor.j.martin@gmail.com",
+  "license": "ISC",
+  "dependencies": {
+    "concurrently": "^6.2.1"
+  }
+}

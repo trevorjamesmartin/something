@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# build the React SPA and rename index.html to prevent ( *) unwanted behavior when serving.
+
+rm -rf api/public && \
+cd client && \
+npm install && \
+npm run-script build && \
+cd .. && \
+mv client/build api/public && \
+mv api/public/index.html api/public/something-else.html
+
+# (* ) index.html is automatically displayed by most servers.
