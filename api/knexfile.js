@@ -10,7 +10,6 @@ module.exports = {
     seeds: { directory: "./db/seeds" },
     useNullAsDefault: true,
   },
-
   staging: {
     client: "pg",
     connection: process.env.DATABASE,
@@ -37,5 +36,15 @@ module.exports = {
       tableName: "knex_migrations",
       directory: "./db/migrations",
     },
+  },
+
+  release: {
+    client: "sqlite3",
+    connection: {
+      filename: "./db/something.db",
+    },
+    migrations: { directory: "./db/migrations" },
+    seeds: { directory: "./db/seeds" },
+    useNullAsDefault: true,
   },
 };
