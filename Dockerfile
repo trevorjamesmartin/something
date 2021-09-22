@@ -25,8 +25,8 @@ RUN chmod +x /app/.bin/build-for-production
 # add folder to the path
 ENV PATH /app/.bin:$PATH
 
-# note
-ENV REACT_FROM_EXPRESS "tjm"
+# note: you can replace this with your fork to help keep track of your containers
+ENV REACT_FROM_EXPRESS "https://github.com/trevorjamesmartin/something.git"
 
 # build client
 RUN build-for-production
