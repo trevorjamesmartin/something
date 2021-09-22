@@ -124,5 +124,4 @@ mnt/*.db
 *.db
 
 # build files
-public/
 api/public
