@@ -4,8 +4,9 @@
   "description": "access the something database",
   "main": "index.js",
   "scripts": {
-    "start": "npm run develop",
     "develop": "npx nodemon",
+    "create-db": "npx knex --env release migrate:latest && npx knex --env release seed:run",
+    "start": "DB_ENVIRONMENT=\"release\" node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "trevor.j.martin@gmail.com",
