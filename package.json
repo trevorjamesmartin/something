@@ -7,7 +7,7 @@
     "install-api": "cd api && npm install",
     "install-client": "cd client && npm install",
     "postinstall": "npx concurrently \"npm run install-api\" \"npm run install-client\"",
-    "start-api": "cd api && npm start",
+    "start-api": "cd api && npm run develop",
     "start-client": "cd client && npm start",
     "predevelop": "npm install",
     "develop": "npx concurrently \"npm run start-api\" \"npm run start-client\"",
