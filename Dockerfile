@@ -41,6 +41,9 @@ RUN cd /app/api && npm install
 RUN cd /app/api && npx knex migrate:latest
 RUN cd /app/api && npx knex seed:run
 
+# create the release file: /app/something.tar.gz
+RUN cd /app && tar cvf something.tar api && gzip something.tar
+
 # expose the express api port
 EXPOSE 8000
 
