@@ -1,6 +1,27 @@
 const db = require("../db/config");
 
-module.exports = { getAll, getWhere, getById, newProduct, emptyTrash, trash, getTrash, getTrashById };
+module.exports = {
+  get: {
+    All: getAll,
+    Where: getWhere,
+    ById: getById,
+    Trash: {
+      All: getTrash,
+      ById: getTrashById,
+    },
+  },
+  put: {
+    Update: updateProduct,
+    Trash: trash,
+    Restore: removeFromTrash,
+  },
+  post: {
+    Create: newProduct,
+  },
+  delete: {
+    Trash: emptyTrash,
+  },
+};
 
 function getAll() {
   return db("product").where({ deleted: false });
@@ -22,8 +43,12 @@ function getById(id) {
   return db("product").where({ id, deleted: false }).first();
 }
 
+function updateProduct(id, changes) {
+  return db("product").where({ id, deleted: false }).update(changes);
+}
+
 function newProduct({ name, description, image_url, type, tags, format }) {
-  // all strings.
+  // confirm all strings.
   const param_error = [name, description, image_url, type, tags, format]
     .map((s) => typeof s === "string")
     .includes(false);
@@ -41,7 +66,7 @@ function newProduct({ name, description, image_url, type, tags, format }) {
 }
 
 function trash(id) {
-  // mark for deletion
+  // mark product for deletion
   return db("product").where({ id }).update({ deleted: true });
 }
 
@@ -50,6 +75,11 @@ function emptyTrash(id) {
     // permanently remove all products marked for deletion.
     return db("product").where({ deleted: true }).del();
   }
-  // permanently remove item with (id) if marked for deletion. 
+  // permanently remove product with (id); when marked for deletion.
   return db("product").where({ id, deleted: true }).del();
+}
+
+function removeFromTrash(id) {
+  // remove product with (id) from trash
+  return db("product").where({ id, deleted: true }).update({ deleted: false });
 }
