@@ -44,11 +44,10 @@ docker-compose build
 ```
 [read more about docker-compose](https://docs.docker.com/compose/install/)
 
-you can copy the new build from the container without having to launch the app
+to copy the new release-build from the container (without having to launch the app)
 ```
 npm run copy-release
 ```
-
 #
 
 ![](.img/cli.png)
