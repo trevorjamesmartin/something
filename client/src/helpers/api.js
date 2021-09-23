@@ -77,5 +77,10 @@ export const getProducts = async () => {
   return result?.data || []
 };
 
+export const submitNewProduct = async (product) => {
+  const cli = await apiClient();
+  const result = await cli.post('/products', product);
+  return result;
+}
 
 export default httpClient;
