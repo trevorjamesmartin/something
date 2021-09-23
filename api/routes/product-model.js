@@ -81,5 +81,5 @@ function emptyTrash(id) {
 
 function removeFromTrash(id) {
   // remove product with (id) from trash
-  return db("product").where({ id, deleted: true }).update({ deleted: false });
+  return db("product").where({ id }).update({ deleted: false });
 }

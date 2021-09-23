@@ -17,7 +17,9 @@
     "helmet": "^4.6.0",
     "knex": "^0.95.11",
     "pg": "^8.7.1",
-    "sqlite3": "^5.0.2"
+    "sqlite3": "^5.0.2",
+    "swagger-jsdoc": "^6.1.0",
+    "swagger-ui-express": "^4.1.6"
   },
   "devDependencies": {
     "nodemon": "^2.0.12"
