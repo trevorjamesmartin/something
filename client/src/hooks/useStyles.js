@@ -1,13 +1,12 @@
-import { makeStyles } from '@mui/styles';
+import { makeStyles } from "@mui/styles";
 
 const useStyles = makeStyles({
-    select: {
-        marginTop: "0.75rem",
-        border: "none",
-        textAlign: "center",
-        alignSelf: "center",
-        width: 345,
-    },
-})
+  select: {
+    border: "none",
+    maxWidth: 570,
+    marginTop: "1rem",
+    marginLeft: ".5rem",
+  },
+});
 
 export default useStyles;
