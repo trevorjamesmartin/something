@@ -14,9 +14,6 @@ import {
   CardMedia,
   Collapse,
   Avatar,
-  Select,
-  MenuItem,
-  FormControl,
 } from "@mui/material";
 import {
   MoreVert as MoreVertIcon,
@@ -24,9 +21,6 @@ import {
   Favorite as FavoriteIcon,
   Share as ShareIcon,
 } from "@mui/icons-material";
-
-// Products component(s)
-import useStyles from "../hooks/useStyles";
 
 /**
  * from MUI documentation, to expand the dropdown menu
@@ -192,28 +186,9 @@ const Products = ({
   products,
   selectProduct,
   unSelectProduct,
-  productFormat,
-  selectFormat,
 }) => {
-  const title =
-    productFormat.slice(0, 1).toUpperCase() + productFormat.slice(1);
-  const handleChange = (e) => selectFormat(e.target.value.toLowerCase());
-  const classes = useStyles();
   return (
     <>
-      <FormControl fullWidth>
-        <Select
-          className={classes.select}
-          id="test"
-          value={title}
-          onChange={handleChange}
-        >
-          <MenuItem value="Flower" sx={{ textAlign: "center" }}>
-            Flower
-          </MenuItem>
-          <MenuItem value="Oil">Oil</MenuItem>
-        </Select>
-      </FormControl>
       <div className="div-products">
         {products.map((p) =>
           ProductListItem({ ...p, selectProduct, unSelectProduct })
@@ -227,7 +202,6 @@ Products.propTypes = {
   products: PropTypes.array,
   selectProduct: PropTypes.func,
   unSelectProduct: PropTypes.func,
-  productFormat: PropTypes.string,
 };
 
 export default Products;
