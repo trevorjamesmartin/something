@@ -85,3 +85,17 @@
   font-size: 2rem;
   padding: 1rem;
 }
+
+.product-form-containter {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.type-tags-format {
+  display: "flex";
+  justify-content: "space-between";
+  max-width: 600;
+  width: "100vw"
+}
