@@ -2,10 +2,12 @@ import React from "react";
 
 import {
   TextField,
-  FormControl,
   MenuItem,
   Select,
   Button,
+  Card,
+  CardHeader,
+  Divider
 } from "@mui/material";
 import useStyles from "../hooks/useStyles";
 
@@ -14,18 +16,29 @@ const NewProduct = ({ handleChange, newProduct: state, handleSubmit }) => {
   const formSubmission = (e) => {
     e.preventDefault();
     if (state.type === "type" || state.format === "format") {
-      return
+      return;
     }
-    handleSubmit()
-  }
+    handleSubmit();
+  };
   return (
-    <form onSubmit={formSubmission}>
-      <div style={{ display: "flex", maxWidth: 570, width: "100vw" }}>
-        <FormControl fullWidth>
+    <Card>
+      <CardHeader
+        title="New Product"
+        subheader="enter product information and press 'create' to update the database"
+      />
+      <form onSubmit={formSubmission} style={{maxWidth: 575}}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            maxWidth: 570,
+            width: "100vw",
+          }}
+        >
           <TextField
             name="name"
             required
-            helperText="Name"  
+            helperText="Name"
             value={state.name}
             onChange={handleChange}
             placeholder="My Great Product"
@@ -34,7 +47,7 @@ const NewProduct = ({ handleChange, newProduct: state, handleSubmit }) => {
           <TextField
             name="description"
             required
-            helperText="Description"  
+            helperText="Description"
             value={state.description}
             onChange={handleChange}
             placeholder="The abosoute best..."
@@ -44,34 +57,41 @@ const NewProduct = ({ handleChange, newProduct: state, handleSubmit }) => {
           />
           <TextField
             name="image_url"
-            helperText="Image URL"  
+            helperText="Image URL"
             value={state.image_url}
             onChange={handleChange}
             placeholder="https://something/my-great-product.png"
             sx={{ maxWidth: 540, marginTop: "1rem", marginLeft: "1rem" }}
           />
-        </FormControl>
-      </div>
-      {/* replace with image uploader ? */}
-      <div className="type-tags-format">
-        <TextField
-          required
-          helperText='Tags "comma,separated,values"'
-          type="string"
-          name="tags"
-          value={state.tags}
-          onChange={handleChange}
-          placeholder="calm,indica-dominant"
-          sx={{ marginTop: "1rem", width: "100vw", maxWidth: 340 }}
-        />
-        <FormControl>
+        </div>
+        {/* replace with image uploader ? */}
+        <div
+          className="type-tags-format"
+          style={{
+            display: "flex",
+            // flexDirection: "column",
+            maxWidth: 540,
+            width: "100vw",
+            marginLeft: "1rem"
+          }}
+        >
+          <TextField
+            required
+            helperText='Tags "comma,separated,values"'
+            type="string"
+            name="tags"
+            value={state.tags}
+            onChange={handleChange}
+            placeholder="calm,indica-dominant"
+            sx={{ marginTop: "1rem", width: "100vw", maxWidth: 340 }}
+          />
           <Select
             className={classes.select}
             required
             name="type"
             value={state.type}
             onChange={handleChange}
-            sx={{ textAlign: "left" }}
+            sx={{ textAlign: "left", height: 57 }}
           >
             <MenuItem value="type" disabled>
               Type
@@ -80,14 +100,13 @@ const NewProduct = ({ handleChange, newProduct: state, handleSubmit }) => {
             <MenuItem value="sativa">Sativa</MenuItem>
             <MenuItem value="hybrid">Hybrid</MenuItem>
           </Select>
-        </FormControl>
-        <FormControl>
+
           <Select
             className={classes.select}
             name="format"
             value={state.format}
             onChange={handleChange}
-            sx={{ textAlign: "left" }}
+            sx={{ textAlign: "left", height: 57 }}
           >
             <MenuItem value="format" disabled>
               Format
@@ -98,14 +117,24 @@ const NewProduct = ({ handleChange, newProduct: state, handleSubmit }) => {
               Concentrate
             </MenuItem>
           </Select>
-        </FormControl>
-      </div>
-      <div style={{ display: "flex", justifyContent: "flex-end", margin: "1rem", maxWidth: 540, width: "100vw" }}>
-        <Button color="primary" variant="contained" type="submit">
-          Create
-        </Button>
-      </div>
-    </form>
+        </div>
+        <br />
+        <Divider variant="middle" />
+        <br />
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            margin: "1rem",
+            width: "100vw",
+          }}
+        >
+          <Button color="primary" variant="contained" type="submit">
+            Create
+          </Button>
+        </div>
+      </form>
+    </Card>
   );
 };
 
