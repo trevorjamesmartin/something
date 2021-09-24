@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { CircularProgress, Typography } from "@mui/material";
+import { CircularProgress, Typography, Button, Box } from "@mui/material";
 
 // local
 import Products from "./components/Product.js";
@@ -24,6 +24,7 @@ function App() {
     format: "flower", // product.format
     newProduct: productSchema,
   });
+  const [openForm, setOpenForm] = useState(false);
   /**
    * call the API and update our list of products
    */
@@ -45,7 +46,6 @@ function App() {
     if (state.calls > 0 && !state.refresh) {
       return;
     }
-    // console.log("GET Products");
     cbGetProducts(state.format);
   }, [state.calls, cbGetProducts, state.refresh, state.format]);
 
@@ -63,8 +63,23 @@ function App() {
 
   return (
     <div className="App">
+      <Box
+        sx={{
+          mx: "auto",
+          p: 2,
+          m: 1,
+          borderRadius: 1,
+          textAlign: "center",
+        }}
+      >
+        <Button variant="outlined" onClick={() => setOpenForm(true)}>
+          New Product
+        </Button>
+      </Box>
       <div className="product-form-containter">
         <NewProduct
+          openForm={openForm}
+          setOpenForm={setOpenForm}
           newProduct={state.newProduct}
           handleSubmit={handleSubmit}
           handleChange={(e) =>
