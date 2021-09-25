@@ -13,6 +13,8 @@ import {
 } from "@mui/material";
 import useStyles from "../hooks/useStyles";
 
+import { ProductListItem } from "./Product";
+
 const NewProduct = ({
   handleChange,
   newProduct: state,
@@ -30,6 +32,19 @@ const NewProduct = ({
   };
   return (
     <Dialog open={openForm} onClose={() => setOpenForm(false)}>
+      <div className="centered-product">
+        <ProductListItem
+          id={0}
+          name={state.name}
+          description={state.description}
+          image_url={state.image_url}
+          type={state.type}
+          tags={state.tags}
+          selected={false}
+          selectProduct={() => false}
+          unSelectProduct={() => false}
+        />
+      </div>
       <form onSubmit={formSubmission}>
         <DialogTitle>New Product</DialogTitle>
         <DialogContent>
@@ -63,7 +78,6 @@ const NewProduct = ({
               value={state.image_url}
               onChange={handleChange}
               placeholder="https://something/my-great-product.png"
-              // sx={{ maxWidth: 540, marginTop: "1rem", marginLeft: "1rem" }}
             />
           </div>
           {/* replace with image uploader ? */}
@@ -117,25 +131,12 @@ const NewProduct = ({
             </Select>
           </div>
           <Divider variant="middle" />
-          {/* <br />
-      <br />
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          margin: "1rem",
-          width: "100vw",
-          maxWidth: 543,
-        }}
-      >
-        <Button color="primary" variant="contained" type="submit">
-          Create
-        </Button>
-      </div> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenForm(false)}>Cancel</Button>
-          <Button color="primary" variant="contained" type="submit">Create</Button>
+          <Button color="primary" variant="contained" type="submit">
+            Create
+          </Button>
         </DialogActions>
       </form>
     </Dialog>
