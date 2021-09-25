@@ -32,12 +32,13 @@ const NewProduct = ({
   };
   return (
     <Dialog open={openForm} onClose={() => setOpenForm(false)}>
+      <DialogTitle>New Product</DialogTitle>
       <div className="centered-product">
         <ProductListItem
           id={0}
           name={state.name}
           description={state.description}
-          image_url={state.image_url || '/mj.jpg'}
+          image_url={state.image_url || "/mj.jpg"}
           type={state.type}
           tags={state.tags}
           selected={false}
@@ -46,7 +47,6 @@ const NewProduct = ({
         />
       </div>
       <form onSubmit={formSubmission}>
-        <DialogTitle>New Product</DialogTitle>
         <DialogContent>
           <div
             style={{
