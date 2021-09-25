@@ -68,7 +68,7 @@ const determineColor = (weights, type) => {
     score.indica += 50;
     score.sativa += 50;
   } else {
-    score[type] += 50;
+    score[type] += 200;
   }
   weights.forEach((lb) => (score[lb] += 125));
   return (
@@ -87,7 +87,7 @@ const determineColor = (weights, type) => {
  * @param {*} props
  * @returns
  */
-const ProductListItem = ({
+export const ProductListItem = ({
   id,
   name,
   description,
