@@ -1,4 +1,5 @@
 import React from "react";
+import { useRecoilState, useRecoilValue } from "recoil";
 
 import {
   TextField,
@@ -13,34 +14,58 @@ import {
 } from "@mui/material";
 import useStyles from "../../hooks/useStyles";
 
+import { appState, productDefault } from "../../atoms";
 import { ProductListItem } from "./Product";
+import { submitNewProduct } from "../../helpers/api";
 
-const NewProduct = ({
-  handleChange,
-  newProduct: state,
-  handleSubmit,
-  openForm,
-  setOpenForm,
-}) => {
+const NewProduct = () => {
+  const [state, setState] = useRecoilState(appState);
+  const defaultProduct = useRecoilValue(productDefault);
   const classes = useStyles();
-  const formSubmission = (e) => {
+  const handleChange = (e) =>
+    setState({
+      ...state,
+      newProduct: { ...state.newProduct, [e.target.name]: e.target.value },
+    });
+  const formSubmission = async (e) => {
     e.preventDefault();
-    if (state.type === "type" || state.format === "format") {
+    console.log("create");
+    if (
+      state.newProduct.type === "type" ||
+      state.newProduct.format === "format"
+    ) {
+      alert("Product type & format required"); // todo
       return;
     }
-    handleSubmit();
+    const product = { ...state.newProduct };
+    console.log(product);
+    const result = await submitNewProduct(product);
+    if (result.status === 201) {
+      console.log("STATUS ", result.status);
+      product["id"] = result?.data?.pop() || 0;
+      console.log(product);
+      setState({
+        ...state,
+        openForm: false,
+        products: [...state.products, product],
+        newProduct: defaultProduct
+      });
+    }
   };
   return (
-    <Dialog open={openForm} onClose={() => setOpenForm(false)}>
+    <Dialog
+      open={state.openForm}
+      onClose={() => setState({ ...state, openForm: false })}
+    >
       <DialogTitle>New Product</DialogTitle>
       <div className="centered-product">
         <ProductListItem
           id={0}
-          name={state.name}
-          description={state.description}
-          image_url={state.image_url || "/mj.jpg"}
-          type={state.type}
-          tags={state.tags}
+          name={state.newProduct.name}
+          description={state.newProduct.description}
+          image_url={state.newProduct.image_url || "/mj.jpg"}
+          type={state.newProduct.type}
+          tags={state.newProduct.tags}
           selected={false}
           selectProduct={() => false}
           unSelectProduct={() => false}
@@ -58,7 +83,7 @@ const NewProduct = ({
               name="name"
               required
               helperText="Name"
-              value={state.name}
+              value={state.newProduct.name}
               onChange={handleChange}
               placeholder="My Great Product"
             />
@@ -66,7 +91,7 @@ const NewProduct = ({
               name="description"
               required
               helperText="Description"
-              value={state.description}
+              value={state.newProduct.description}
               onChange={handleChange}
               placeholder="The abosoute best..."
               multiline={true}
@@ -75,7 +100,7 @@ const NewProduct = ({
             <TextField
               name="image_url"
               helperText="Image URL"
-              value={state.image_url}
+              value={state.newProduct.image_url}
               onChange={handleChange}
               placeholder="https://something/my-great-product.png"
             />
@@ -92,16 +117,16 @@ const NewProduct = ({
               helperText='Tags "comma,separated,values"'
               type="string"
               name="tags"
-              value={state.tags}
+              value={state.newProduct.tags}
               onChange={handleChange}
               placeholder="calm,indica-dominant"
               sx={{ marginTop: "1rem", width: "100vw", maxWidth: 340 }}
             />
             <Select
-              className={classes.select}
+              className={classes.select} 
               required
               name="type"
-              value={state.type}
+              value={state.newProduct.type}
               onChange={handleChange}
               sx={{ textAlign: "left", height: 57 }}
             >
@@ -116,7 +141,7 @@ const NewProduct = ({
             <Select
               className={classes.select}
               name="format"
-              value={state.format}
+              value={state.newProduct.format}
               onChange={handleChange}
               sx={{ textAlign: "left", height: 57 }}
             >
@@ -133,7 +158,9 @@ const NewProduct = ({
           <Divider variant="middle" />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenForm(false)}>Cancel</Button>
+          <Button onClick={() => setState({ ...state, openForm: false })}>
+            Cancel
+          </Button>
           <Button color="primary" variant="contained" type="submit">
             Create
           </Button>

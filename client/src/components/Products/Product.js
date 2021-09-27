@@ -1,5 +1,17 @@
 // React
 import React, { useState, useEffect, useCallback } from "react";
+import { useRecoilState, useRecoilValue } from "recoil";
+import {
+  appState,
+  productlist,
+  reloadProducts,
+  requestCount,
+  appTitle,
+  productFormat,
+  productSelector,
+  productUnselector,
+  productDefault
+} from "../../atoms";
 import PropTypes from "prop-types";
 
 // MUI
@@ -98,15 +110,17 @@ export const ProductListItem = ({
   type,
   tags,
   selected,
-  selectProduct,
-  unSelectProduct,
 }) => {
   // mui toggler
   const [expanded, setExpanded] = useState(false);
   const toggleExpanded = () => setExpanded(!expanded);
-
+  // recoil state
+  const [, selectProduct] = useRecoilState(productSelector);
+  const [, unSelectProduct] = useRecoilState(productUnselector);
+  // transformers
   const { weights, newTags } = sortProductTags(tags);
   const bgcolor = determineColor(weights, type);
+  // render
   return (
     <Card
       className="product-list-item"
@@ -177,74 +191,53 @@ ProductListItem.propTypes = {
   image_url: PropTypes.string,
   type: PropTypes.string,
   selected: PropTypes.bool,
-  selectProduct: PropTypes.func,
-  unSelectProduct: PropTypes.func,
 };
 
-/**
- * Products
- * @param {*} props
- */
-const Products = ({ products, selectProduct, unSelectProduct }) => {
-  return (
-    <>
-      <div className="div-products">
-        {products.map((p) =>
-          ProductListItem({ ...p, selectProduct, unSelectProduct })
-        )}
-      </div>
-    </>
-  );
-};
+export const ProductList = ({ format, title }) => {
+  // recoil state
+  const state = useRecoilValue(appState);
+  const [getProducts, setProducts] = useRecoilState(productlist);
+  const [reqCount, incReqCount] = useRecoilState(requestCount);
+  const [reload, setReload] = useRecoilState(reloadProducts);
+  const [, setFormat] = useRecoilState(productFormat);
+  const [, setTitle] = useRecoilState(appTitle);
+  const [, resetForm] = useRecoilState(productDefault);
+  // local state  
+  const [loadingState, setLoadingState] = useState(false);
+  const loadingProducts = reload || reqCount === 0;
 
-Products.propTypes = {
-  products: PropTypes.array,
-  selectProduct: PropTypes.func,
-  unSelectProduct: PropTypes.func,
-};
-
-export const ProductList = ({
-  state,
-  setState,
-  loadingProducts,
-  format,
-  title,
-}) => {
   const cbGetProducts = useCallback(async () => {
-    setState((s) => ({
-      ...s,
-      products: [],
-      refresh: true,
-      title,
-      format: format ? format : state.format,
-    }));
-    const { products } = await getProductsInFormat(format);
-    // if we're developing, simulate traffic (to see the loading... spinner)
+    await setProducts([]); // empty products
+    (await title.length) > 0 && setTitle(title); // set title when applicable
+    (await format.length) > 0 && setFormat(format); // set format when applicable
+    const { products } = await getProductsInFormat(format); // GET
+    // if we're developing, simulate traffic (spinner optics)
     process.env.NODE_ENV === "development" &&
       (await new Promise((resolve) => setTimeout(resolve, 500))); // sleep for half a second
-    setState(({ calls, ...s }) => ({
-      ...s,
-      calls: calls + 1,
-      products,
-      refresh: false,
-    }));
-  }, [setState, title, format, state.format]);
+      await incReqCount(); // increase the request count and return our list of products
+    return products;
+  }, [format, incReqCount, setFormat, setProducts, setTitle, title]);
 
   useEffect(() => {
-    if (state.title === title && state.format === format) {
+    if (loadingState) {
+      // console.log('still waiting for page to load...')
       return;
     }
-    console.log("fetching ", title);
-    cbGetProducts();
-  }, [
-    state.calls,
-    cbGetProducts,
-    state.refresh,
-    state.format,
-    state.title,
-    title,
-    format,
-  ]);
+    if (state.title === title && state.format === format) {
+      // console.log('no change in format or title')
+      return;
+    };
+    setLoadingState(true) // "don't come around here no more"
+    setReload(true); // spin it
+    async function loadInventory() {
+      await (setTitle(title) && setFormat(format));
+      const result = await cbGetProducts();
+      await setProducts(result)
+      await setReload(false)
+      await setLoadingState(false);
+    }
+    loadInventory();
+  }, [cbGetProducts, format, loadingState, reload, resetForm, setFormat, setProducts, setReload, setTitle, state.format, state.title, title]);
 
   return loadingProducts ? (
     <div className="spinner-div">
@@ -255,24 +248,21 @@ export const ProductList = ({
       </Typography>
     </div>
   ) : (
-    <Products
-      products={state.products}
-      productFormat={state.format}
-      selectProduct={(id) => {
-        const products = state.products.map((item) =>
-          item.id === id
-            ? { ...item, selected: true }
-            : { ...item, selected: false }
-        );
-        setState({ ...state, products });
-      }}
-      unSelectProduct={(id) => {
-        const products = state.products.map((item) =>
-          item.id === id ? { ...item, selected: false } : item
-        );
-        setState({ ...state, products });
-      }}
-    />
+    // map it here
+    <div className="div-products">
+      {getProducts &&
+        getProducts.map((p) => (
+          <ProductListItem
+            key={p.id}
+            id={p.id}
+            name={p.name}
+            description={p.description}
+            image_url={p.image_url}
+            type={p.type}
+            tags={p.tags}
+            selected={p.selected}
+          />
+        ))}
+    </div>
   );
 };
-export default Products;

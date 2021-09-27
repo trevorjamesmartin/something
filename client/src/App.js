@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { useRecoilState, useRecoilValue } from "recoil";
+
 import {
   BrowserRouter as Router,
   Switch,
@@ -16,64 +19,30 @@ import {
   bindMenu,
 } from "material-ui-popup-state/hooks";
 // local
+import { appState, productFormat, openForm } from "./atoms";
 import { ProductList, NewProduct } from "./components";
-import { submitNewProduct } from "./helpers/api";
 import "./App.css";
 
-// const = Product;
-const productSchema = {
-  name: "",
-  description: "",
-  image_url: "",
-  type: "type",
-  tags: "",
-  format: "format",
-};
+function ErrorFallback({ error }) {
+  return (
+    <div>
+      <div>Oh no, there was an error. Check the console for details.</div>
+      <div>
+        <pre>{error.message}</pre>
+      </div>
+    </div>
+  );
+}
 
 function App() {
   const history = useHistory();
-  const [state, setState] = useState({
-    products: [],
-    calls: 0, // the number of calls made to the API
-    refresh: false, // when true, call the API
-    format: "", // product.format
-    newProduct: productSchema,
-    title: "Welcome",
-  });
-  const [openForm, setOpenForm] = useState(false);
+  const state = useRecoilValue(appState);
+  const [, setFormat] = useRecoilState(productFormat);
+  const [, setOpenForm] = useRecoilState(openForm);
   const popupState = usePopupState({ variant: "popover", popupId: "Menu" });
-  const defaultProps = {
-    state,
-    setState,
-    loadingProducts: state.refresh || !state.calls,
-  };
-
-  const handleSubmit = async () => {
-    if (
-      state.newProduct.type === "type" ||
-      state.newProduct.format === "format"
-    ) {
-      return;
-    }
-    const result = await submitNewProduct(state.newProduct);
-    console.log(result);
-    setState({ ...state, refresh: true, newProduct: productSchema });
-  };
-
-  const newProductProps = {
-    openForm,
-    setOpenForm,
-    newProduct: state.newProduct,
-    handleSubmit,
-    handleChange: (e) =>
-      setState({
-        ...state,
-        newProduct: { ...state.newProduct, [e.target.name]: e.target.value },
-      }),
-  };
 
   const menuClicked = (e) => {
-    setState({ ...state, format: e.target.id });
+    setFormat(e.target.id);
     popupState.close();
   };
   return (
@@ -129,7 +98,7 @@ function App() {
               to={"/products/flower"}
               onClick={menuClicked}
             >
-            <YardIcon sx={{marginRight: "1rem"}}/>
+              <YardIcon sx={{ marginRight: "1rem" }} />
               Flower
             </MenuItem>
             <MenuItem
@@ -138,7 +107,7 @@ function App() {
               to="/products/oil"
               onClick={menuClicked}
             >
-            <SmokeFreeIcon sx={{marginRight: "1rem"}}/>
+              <SmokeFreeIcon sx={{ marginRight: "1rem" }} />
               Oil
             </MenuItem>
             <Divider variant="middle" />
@@ -148,7 +117,7 @@ function App() {
               to="/products/admin"
               onClick={menuClicked}
             >
-              <AdminPanelSettingsIcon sx={{marginRight: "1rem"}} />
+              <AdminPanelSettingsIcon sx={{ marginRight: "1rem" }} />
               Admin Panel
             </MenuItem>
           </Menu>
@@ -170,21 +139,23 @@ function App() {
             </Box>
             <Divider variant="fullWidth" />
             <div className="product-form-containter">
-              <NewProduct {...newProductProps} />
+              <NewProduct />
             </div>
-            <ProductList
-              {...defaultProps}
-              format={state.format}
-              title="Browse"
-            />
+            <ErrorBoundary FallbackComponent={ErrorFallback}>
+              <ProductList format="/" title="Browse" />
+            </ErrorBoundary>
           </Route>
           <Route path="/products/flower">
             <Divider variant="fullWidth" />
-            <ProductList {...defaultProps} format="flower" title="Flower" />
+            <ErrorBoundary FallbackComponent={ErrorFallback}>
+              <ProductList format="flower" title="Flower" />
+            </ErrorBoundary>
           </Route>
           <Route path="/products/oil">
             <Divider variant="fullWidth" />
-            <ProductList {...defaultProps} format="oil" title="Oil" />
+            <ErrorBoundary FallbackComponent={ErrorFallback}>
+              <ProductList format="oil" title="Oil" />
+            </ErrorBoundary>
           </Route>
           <Route path="/">
             <Box
