@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 8000;
  */
 const httpClient = (host) =>
   axios.create({
-    baseURL: `http://${host || HOST}:${PORT}`,
+    baseURL: `http://${host || HOST}:${PORT}/api`,
     timeout: 1000,
     headers: { "X-Custom-Header": "420" },
   });
@@ -21,7 +21,7 @@ const httpClient = (host) =>
  */
 const httpsClient = (host) =>
   axios.create({
-    baseURL: `https://${host || HOST}:${PORT}`,
+    baseURL: `https://${host || HOST}:${PORT}/api`,
     timeout: 1000,
     headers: { "X-Custom-Header": "420" },
   });
@@ -34,6 +34,7 @@ const apiClient = async () => {
   if (process.env.NODE_ENV === 'production') {
     // don't include the baseURL if we're serving React from Express
     return axios.create({
+      baseURL: `/api`,
       timeout: 1000,
       headers: { "X-Custom-Header": "420"}
     })
