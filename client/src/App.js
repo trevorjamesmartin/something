@@ -1,12 +1,23 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { CircularProgress, Typography, Button, Box } from "@mui/material";
-
+import React, { useState } from "react";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  useHistory,
+  Link,
+} from "react-router-dom";
+import { Button, Box, Menu, MenuItem } from "@mui/material";
+import {
+  usePopupState,
+  bindTrigger,
+  bindMenu,
+} from "material-ui-popup-state/hooks";
 // local
-import Products from "./components/Product.js";
-import NewProduct from "./components/Form.js";
-import { getProductsInFormat, submitNewProduct } from "./helpers/api";
+import { ProductList, NewProduct } from "./components";
+import { submitNewProduct } from "./helpers/api";
 import "./App.css";
 
+// const = Product;
 const productSchema = {
   name: "",
   description: "",
@@ -17,37 +28,22 @@ const productSchema = {
 };
 
 function App() {
+  const history = useHistory();
   const [state, setState] = useState({
     products: [],
     calls: 0, // the number of calls made to the API
     refresh: false, // when true, call the API
-    format: "flower", // product.format
+    format: "", // product.format
     newProduct: productSchema,
+    title: "Welcome",
   });
   const [openForm, setOpenForm] = useState(false);
-  /**
-   * call the API and update our list of products
-   */
-  const cbGetProducts = useCallback(async () => {
-    setState((s) => ({ ...s, products: [] }));
-    const { products } = await getProductsInFormat(state.format);
-    // if we're developing, simulate traffic
-    process.env.NODE_ENV === "development" &&
-      (await new Promise((resolve) => setTimeout(resolve, 500))); // sleep for half a second
-    setState(({ calls, ...s }) => ({
-      ...s,
-      calls: calls + 1,
-      products,
-      refresh: false,
-    }));
-  }, [state.format]);
-
-  useEffect(() => {
-    if (state.calls > 0 && !state.refresh) {
-      return;
-    }
-    cbGetProducts(state.format);
-  }, [state.calls, cbGetProducts, state.refresh, state.format]);
+  const popupState = usePopupState({ variant: "popover", popupId: "Menu" });
+  const defaultProps = {
+    state,
+    setState,
+    loadingProducts: state.refresh || !state.calls,
+  };
 
   const handleSubmit = async () => {
     if (
@@ -60,78 +56,96 @@ function App() {
     console.log(result);
     setState({ ...state, refresh: true, newProduct: productSchema });
   };
-
+  const menuClicked = (e) => {
+    setState({ ...state, format: e.target.id });
+    popupState.close();
+  };
   return (
-    <div className="App">
-      <Box
-        sx={{
-          mx: "auto",
-          p: 2,
-          m: 1,
-          borderRadius: 1,
-          textAlign: "center",
-        }}
-      >
-        <Button variant="outlined" onClick={() => setOpenForm(true)}>
-          New Product
-        </Button>
-      </Box>
-      <div className="product-form-containter">
-        <NewProduct
-          openForm={openForm}
-          setOpenForm={setOpenForm}
-          newProduct={state.newProduct}
-          handleSubmit={handleSubmit}
-          handleChange={(e) =>
-            e.target.name === "format"
-              ? setState({
-                  ...state,
-                  format: e.target.value,
-                  refresh: true,
-                  newProduct: {
-                    ...state.newProduct,
-                    [e.target.name]: e.target.value,
-                  },
-                })
-              : setState({
-                  ...state,
-                  newProduct: {
-                    ...state.newProduct,
-                    [e.target.name]: e.target.value,
-                  },
-                })
-          }
-        />
+    <Router history={history}>
+      <div className="App">
+        <br />
+        <Box
+          sx={{
+            mx: "auto",
+            p: 2,
+            m: 1,
+            borderRadius: 1,
+            textAlign: "center",
+          }}
+        >
+          <Button variant="outlined" {...bindTrigger(popupState)}>
+            {state.title}
+          </Button>
+          <Menu {...bindMenu(popupState)}>
+            <MenuItem
+              id="flower"
+              component={Link}
+              to={"/products/flower"}
+              onClick={menuClicked}
+            >
+              Flower
+            </MenuItem>
+            <MenuItem
+              id="oil"
+              component={Link}
+              to="/products/oil"
+              onClick={menuClicked}
+            >
+              Oil
+            </MenuItem>
+          </Menu>
+        </Box>
+        <Switch>
+          <Route path="/products/admin">
+            <Box
+              sx={{
+                mx: "auto",
+                p: 2,
+                m: 1,
+                borderRadius: 1,
+                textAlign: "center",
+              }}
+            >
+              <Button variant="outlined" onClick={() => setOpenForm(true)}>
+                New Product
+              </Button>
+            </Box>
+            <div className="product-form-containter">
+              <NewProduct
+                openForm={openForm}
+                setOpenForm={setOpenForm}
+                newProduct={state.newProduct}
+                handleSubmit={handleSubmit}
+                handleChange={(e) =>
+                  setState({
+                    ...state,
+                    newProduct: {
+                      ...state.newProduct,
+                      [e.target.name]: e.target.value,
+                    },
+                  })
+                }
+              />
+            </div>
+            <ProductList
+              {...defaultProps}
+              format={state.format}
+              title="Browse"
+            />
+          </Route>
+          <Route path="/products/flower">
+            <ProductList {...defaultProps} format="flower" title="Flower" />
+          </Route>
+          <Route path="/products/oil">
+            <ProductList {...defaultProps} format="oil" title="Oil" />
+          </Route>
+          <Route path="/">
+            <h1>Home</h1>
+            <img src="/mj.jpg" alt="marijuana leaf" />
+          </Route>
+        </Switch>
       </div>
-      {state?.products?.length > 0 ? (
-        <Products
-          products={state.products}
-          productFormat={state.format}
-          selectProduct={(id) => {
-            const products = state.products.map((item) =>
-              item.id === id
-                ? { ...item, selected: true }
-                : { ...item, selected: false }
-            );
-            setState({ ...state, products });
-          }}
-          unSelectProduct={(id) => {
-            const products = state.products.map((item) =>
-              item.id === id ? { ...item, selected: false } : item
-            );
-            setState({ ...state, products });
-          }}
-        />
-      ) : (
-        <div className="spinner-div">
-          <br />
-          <CircularProgress />
-          <Typography variant="body2" color="text.secondary">
-            fetching {state.format}
-          </Typography>
-        </div>
-      )}
-    </div>
+    </Router>
   );
 }
 
