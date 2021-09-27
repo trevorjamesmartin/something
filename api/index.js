@@ -33,7 +33,7 @@ const openapiSpecification = swaggerJsdoc({
   },
   apis: ["./routes/*.js"], // files containing annotations as above
 });
-api.use("/docs", swaggerUi.serve, swaggerUi.setup(openapiSpecification));
+api.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openapiSpecification));
 
 // the view engine is key to rendering your SPA
 api.set("views", path.join(__dirname, "public"));
@@ -45,7 +45,7 @@ api.use(cors()); // necessary
 api.use(express.json()); // built-in option
 
 // API routes
-api.use("/products", productRouter);
+api.use("/api/products", productRouter);
 
 // HTML renders SPA
 api.use(express.static(path.join(__dirname, "public")));
@@ -65,7 +65,7 @@ api.use((req, res, next) => {
 });
 
 // NOTE: in this set, 404s may end up rendering the homepage.
-api.get("/", function (req, res) {
+api.use(function (req, res) {
   res.sendFile(path.join(__dirname, "public", "something-else.html"));
 });
 
