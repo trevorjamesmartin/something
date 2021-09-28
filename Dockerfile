@@ -26,8 +26,7 @@ RUN chmod +x /app/.bin/build-for-production
 ENV PATH /app/.bin:$PATH
 
 # note: you can replace this with your fork to help keep track of your containers
-ENV REACT_FROM_EXPRESS "https://github.com/trevorjamesmartin/something.git"
-
+ENV REACT_FROM_EXPRESS=https://github.com/trevorjamesmartin/something.git
 # build client
 RUN build-for-production
 
@@ -47,5 +46,7 @@ RUN cd /app && tar cvf something.tar api && gzip something.tar
 # expose the express api port
 EXPOSE 8000
 
+# run express in production mode
+ENV NODE_ENV=production
 # the start script should include a database check
 CMD ["start-something"]

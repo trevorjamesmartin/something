@@ -1,6 +1,8 @@
 // standard library
 const path = require("path");
+const compression = require('compression');
 // 3rd party
+
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -11,6 +13,8 @@ const swaggerUi = require("swagger-ui-express");
 const productRouter = require("./routes/product-router");
 const PORT = process.env.PORT || 8000;
 const HOST = process.env.HOST || "0.0.0.0";
+
+api.use(compression()); // compress page content to reduce size
 
 // swagger
 const openapiSpecification = swaggerJsdoc({
@@ -47,7 +51,7 @@ api.use(express.json()); // built-in option
 // API routes
 api.use("/api/products", productRouter);
 
-// HTML renders SPA
+// HTML renders SPA from here, (app-wide cache settings)
 api.use(express.static(path.join(__dirname, "public")));
 
 api.use((req, res, next) => {
