@@ -13,6 +13,7 @@ import { Button, Box, Menu, MenuItem, Divider } from "@mui/material";
 import YardIcon from "@mui/icons-material/Yard";
 import SmokeFreeIcon from "@mui/icons-material/SmokeFree";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import ChatBubble from "@mui/icons-material/ChatBubble"
 import {
   usePopupState,
   bindTrigger,
@@ -121,6 +122,16 @@ function App() {
               <AdminPanelSettingsIcon sx={{ marginRight: "1rem" }} />
               Admin Panel
             </MenuItem>
+            <Divider variant="middle" />
+            <MenuItem
+              id=""
+              component={Link}
+              to="/chat"
+              onClick={menuClicked}
+            >
+              <ChatBubble sx={{ marginRight: "1rem" }} />
+              Chat
+            </MenuItem>            
           </Menu>
         </Box>
         <Switch>
@@ -143,7 +154,7 @@ function App() {
               <NewProduct />
             </div>
             <ErrorBoundary FallbackComponent={ErrorFallback}>
-              <ProductList format="/" title="Browse" />
+              <ProductList format="/" title="Menu" />
             </ErrorBoundary>
           </Route>
           <Route path="/products/flower">
