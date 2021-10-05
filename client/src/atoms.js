@@ -19,6 +19,12 @@ const appState = atom({
     reloadProducts: false, // when true, call the API
     format: "", // product.format
     newProduct: defaultProduct,
+    socket: null,
+    chat: {
+      name: "anonymous",
+      output: ["hello", "welcome to the chat"],
+      input: "",
+    },
   },
 });
 
@@ -102,6 +108,28 @@ const productDefault = selector({
     }),
 });
 
+const socket = selector({
+  key: "socket",
+  get: ({ get }) => get(appState).socket,
+  set: ({ set, get }, socket) =>
+    set(appState, {
+      ...get(appState),
+      socket,
+    }),
+});
+
+const chat = selector({
+  key: "chat",
+  get: ({ get }) => get(appState).chat,
+  set: ({ set, get }, update) => {
+    const old = get(appState);
+    set(appState, {
+      ...old,
+      chat: { ...old.chat, ...update },
+    });
+  },
+});
+
 export {
   appState,
   productlist,
@@ -113,4 +141,6 @@ export {
   productSelector,
   productUnselector,
   productDefault,
+  socket,
+  chat,
 };

@@ -20,7 +20,8 @@ import {
 } from "material-ui-popup-state/hooks";
 // local
 import { appState, productFormat, openForm } from "./atoms";
-import { ProductList, NewProduct } from "./components";
+import { ProductList, NewProduct, ChatWindow } from "./components";
+
 import "./App.css";
 
 function ErrorFallback({ error }) {
@@ -40,11 +41,11 @@ function App() {
   const [, setFormat] = useRecoilState(productFormat);
   const [, setOpenForm] = useRecoilState(openForm);
   const popupState = usePopupState({ variant: "popover", popupId: "Menu" });
-
   const menuClicked = (e) => {
     setFormat(e.target.id);
     popupState.close();
   };
+
   return (
     <Router history={history}>
       <div className="App">
@@ -157,6 +158,10 @@ function App() {
               <ProductList format="oil" title="Oil" />
             </ErrorBoundary>
           </Route>
+          <Route path="/chat">
+            <ChatWindow />
+          </Route>
+
           <Route path="/">
             <Box
               component="img"

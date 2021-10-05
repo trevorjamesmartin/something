@@ -4,16 +4,16 @@ cleanClient() {
 }
 
 cleanAPI() {
-    cd /app/api && rm -rf node_modules && rm -rf public/*
+    cd /app/api && rm -rf node_modules && rm -rf rest/public
 }
 
 buildClient() {
     cd /app/client && \
     npm install && \
     npm run-script build && \
-    mkdir -p /app/api/public && \
-    mv /app/client/build/* /app/api/public && \
-    mv /app/api/public/index.html /app/api/public/something-else.html
+    mkdir -p /app/api/rest/public && \
+    mv /app/client/build/* /app/api/rest/public && \
+    mv /app/api/rest/public/index.html /app/api/rest/public/something-else.html
 }
 
 echo "cleaning"

@@ -1,5 +1,7 @@
 import React from "react";
+import RecoilOutside from "recoil-outside";
 import ReactDOM from "react-dom";
+
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
@@ -7,6 +9,7 @@ import { RecoilRoot } from "recoil";
 ReactDOM.render(
   <React.StrictMode>
     <RecoilRoot>
+      <RecoilOutside />
       <App />
     </RecoilRoot>
   </React.StrictMode>,

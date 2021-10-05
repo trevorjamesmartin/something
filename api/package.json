@@ -20,7 +20,8 @@
     "pg": "^8.7.1",
     "sqlite3": "^5.0.2",
     "swagger-jsdoc": "^6.1.0",
-    "swagger-ui-express": "^4.1.6"
+    "swagger-ui-express": "^4.1.6",
+    "ws": "^8.2.3"
   },
   "devDependencies": {
     "nodemon": "^2.0.12"
