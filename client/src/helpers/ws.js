@@ -1,5 +1,8 @@
 import updateChat from "./state";
-const ws = new WebSocket("ws://0.0.0.0:8080/ws");
+const hostname = window.location.hostname;
+const secureProtocol = window.location.href.startsWith('https');
+const wsURL = `${secureProtocol ? 'wss':'ws'}://${secureProtocol ? window.location.host : hostname + ':8080'}/ws`;
+const ws = new WebSocket(wsURL);
 
 // connection opened
 ws.addEventListener("open", function (event) {
