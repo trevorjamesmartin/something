@@ -1,13 +1,15 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
 import { useRecoilValue, useRecoilState } from "recoil";
 import { socket as socketState, chat as chatState } from "../../atoms";
-import ws from '../../helpers/ws'
+import ws from "../../helpers/ws";
 
-const ChatWindow = (props) => {
+const ChatWindow = () => {
+  const inputText = useRef(null);
   const chat = useRecoilValue(chatState);
   const [, setChat] = useRecoilState(chatState);
   const [, setSocket] = useRecoilState(socketState);
   const websocket = useRecoilValue(socketState);
+
   const cbSetSocket = useCallback(
     function (value) {
       setSocket(value);
@@ -16,11 +18,14 @@ const ChatWindow = (props) => {
   );
 
   useEffect(() => {
-    if (websocket) {
-      console.log('ok, connected')
-      return;
+    if (inputText.current) {
+      inputText.current.focus();
     }
-    cbSetSocket(ws);
+    if (!websocket) {
+      // connect to websocket
+      cbSetSocket(ws);
+      console.log("connected to websocket");
+    }
   }, [websocket, cbSetSocket]);
 
   function say(e) {
@@ -42,25 +47,36 @@ const ChatWindow = (props) => {
   return (
     <>
       <form onSubmit={say}>
-        <label>Name:</label>
-        <input
-          value={chat.name}
-          onChange={(e) => {
-            e.preventDefault();
-            setChat((old) => ({ ...old, name: e.target.value }));
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            marginLeft: "8vw",
           }}
-        />
-
+        >
+          <label>[{chat.name}]</label>
+        </div>
+        <br />
+        <div>
         <textarea
           className="chat-area"
           style={{ width: "84vw", height: "42vh" }}
           value={chat.output?.join("\n")}
           readOnly
         />
+        <textarea
+          className="user-list"
+          style={{ width: "12vw", height: "42vh" }}
+          value={chat.users?.join('\n')}
+          readOnly
+        />
+        </div>
         <br />
         <label>
           Chat:
           <input
+            onFocus={(e) => e.currentTarget.select()}
             value={chat.input}
             style={{ width: "77vw" }}
             onChange={(e) => {
