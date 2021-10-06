@@ -1,5 +1,6 @@
 import { atom, selector } from "recoil";
 
+// defaults
 const defaultProduct = {
   image_url: "",
   name: "",
@@ -9,6 +10,15 @@ const defaultProduct = {
   format: "format",
 };
 
+const defaultChat = {
+  name: "anonymous",
+  output: ["welcome to the chat", ""],
+  input: "",
+  openForm: false,
+  users: [],
+};
+
+// Atom
 const appState = atom({
   key: "appState",
   default: {
@@ -20,14 +30,11 @@ const appState = atom({
     format: "", // product.format
     newProduct: defaultProduct,
     socket: null,
-    chat: {
-      name: "anonymous",
-      output: ["hello", "welcome to the chat"],
-      input: "",
-    },
+    chat: defaultChat,
   },
 });
 
+// selectors
 const productlist = selector({
   key: "products",
   get: ({ get }) => get(appState).products,
