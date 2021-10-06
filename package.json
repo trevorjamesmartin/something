@@ -18,7 +18,7 @@
     "clean-client": "cd client && rm -rf node_modules && rm -rf build",
     "clean": "npm run clean-api && npm run clean-client && rm -rf node_modules",
     "first-run": "npm install && npm run create-db && npm start",
-    "build": "rm -rf api/public && cd client && npm install && npm run-script build && cd .. && mv client/build api/public && mv api/public/index.html api/public/something-else.html",
+    "build": "rm -rf api/rest/public && cd client && npm install && npm run-script build && cd .. && mv client/build api/rest/public && mv api/rest/public/index.html api/rest/public/something-else.html",
     "copy-release": "docker create -ti --name something-released something-webbed sh && docker cp something-released:/app/something.tar.gz ./something.tar.gz && docker rm -fv something-released",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
