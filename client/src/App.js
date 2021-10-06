@@ -1,7 +1,8 @@
+// rendering
 import React from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { useRecoilState, useRecoilValue } from "recoil";
-
+// routing
 import {
   BrowserRouter as Router,
   Switch,
@@ -9,22 +10,35 @@ import {
   useHistory,
   Link,
 } from "react-router-dom";
+// components
 import { Button, Box, Menu, MenuItem, Divider } from "@mui/material";
 import YardIcon from "@mui/icons-material/Yard";
 import SmokeFreeIcon from "@mui/icons-material/SmokeFree";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
-import ChatBubble from "@mui/icons-material/ChatBubble"
+import ChatBubble from "@mui/icons-material/ChatBubble";
 import {
   usePopupState,
   bindTrigger,
   bindMenu,
 } from "material-ui-popup-state/hooks";
-// local
-import { appState, productFormat, openForm } from "./atoms";
-import { ProductList, NewProduct, ChatWindow } from "./components";
-
+// local components
+import { appState, productFormat, openForm, chat } from "./atoms";
+import { ProductList, NewProduct, ChatWindow, ChatForm } from "./components";
+// local styling
 import "./App.css";
 
+/**
+ * (catch unbound errors before they break the App)
+ * @example
+ * import { ErrorBoundary } from "react-error-boundary";
+ * ...
+ *
+ *  return (<ErrorBoundary FallbackComponent={ErrorFallback}>
+ *            <MyComponent />
+ *          </ErrorBoundary>)
+ *
+ *
+ */
 function ErrorFallback({ error }) {
   return (
     <div>
@@ -36,14 +50,27 @@ function ErrorFallback({ error }) {
   );
 }
 
+/**
+ * Main
+ * @returns App
+ */
 function App() {
   const history = useHistory();
   const state = useRecoilValue(appState);
   const [, setFormat] = useRecoilState(productFormat);
   const [, setOpenForm] = useRecoilState(openForm);
+  const [, setChatName] = useRecoilState(chat);
   const popupState = usePopupState({ variant: "popover", popupId: "Menu" });
   const menuClicked = (e) => {
-    setFormat(e.target.id);
+    switch (e.target.id) {
+      case "chat":
+        setChatName((s) => ({ ...s, openForm: true }));
+        break;
+    
+      default:
+        setFormat(e.target.id);
+        break;
+    }
     popupState.close();
   };
 
@@ -124,14 +151,14 @@ function App() {
             </MenuItem>
             <Divider variant="middle" />
             <MenuItem
-              id=""
+              id="chat"
               component={Link}
               to="/chat"
               onClick={menuClicked}
             >
               <ChatBubble sx={{ marginRight: "1rem" }} />
               Chat
-            </MenuItem>            
+            </MenuItem>
           </Menu>
         </Box>
         <Switch>
@@ -170,9 +197,13 @@ function App() {
             </ErrorBoundary>
           </Route>
           <Route path="/chat">
-            <ChatWindow />
+            <div className="product-form-containter">
+              <ChatForm />
+            </div>
+            <ErrorBoundary FallbackComponent={ErrorFallback}>
+              <ChatWindow />
+            </ErrorBoundary>
           </Route>
-
           <Route path="/">
             <Box
               component="img"
