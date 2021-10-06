@@ -33,11 +33,11 @@ _to deploy each piece seperately, you'll need to adjust your CI accordingly_
 
 ## building
 
+with Docker installed, we can build everything inside the latest node:lts-alpine container.
+
 ![](.img/docker.png)
 
-with Docker, it's possible to build everything inside the latest node:lts-alpine container.
-
-it's the cleanest environment I can spin up in under a minute and it builds on [the official Node image](https://hub.docker.com/_/node)
+the container is built from [the Official Node JS image](https://hub.docker.com/_/node)
 
 ```
 docker-compose build
@@ -54,7 +54,10 @@ npm run copy-release
 
 (without Docker)
 
-to create an optimized production build of the client (during devlopment)
+
+![](.img/bridge.jpg)
+
+to create an optimized production build of the client (during development)
 ```
 npm run build
 ```
