@@ -1,4 +1,7 @@
 import React, { useCallback, useEffect, useRef } from "react";
+
+import QRCode from "react-qr-code";
+
 import { useRecoilValue, useRecoilState } from "recoil";
 import { socket as socketState, chat as chatState } from "../../atoms";
 import ws from "../../helpers/ws";
@@ -87,6 +90,10 @@ const ChatWindow = () => {
         </label>
         <button type="submit">enter</button>
       </form>
+      <br />
+      <div style={{padding: "1rem"}}>
+      {window.location.href.startsWith('https') ? <QRCode value={window.location.href} /> : ""}
+      </div>
     </>
   );
 };
