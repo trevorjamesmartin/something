@@ -3,6 +3,11 @@
 #           Hi     :)              #
 ####################################
 
+echo "... 'npm start' or 'npm run first-run' ?"
+exit 0
+
+# this was the original bash script I used with concurrently... the logic that follows is located elsewhere
+
 if [[ ! -v DB_ENVIRONMENT ]]; then
     echo 'DB_ENVIRONMENT undefined, development settings selected.'
     DB_CONF="development"
