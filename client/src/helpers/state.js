@@ -33,4 +33,23 @@ export async function updateChatNames(params) {
   return await promiseSetRecoil(chat, update);
 }
 
+export async function connectionClosed() {
+  const old = await promiseGetRecoil(chat);
+  const update = {...old, 
+    output: [...old.output, "***[CONNECTION CLOSED]***"],
+    users: [],
+    connected: false
+  }
+  return await promiseSetRecoil(chat, update);  
+}
+
+export async function connectionOpened() {
+  const old = await promiseGetRecoil(chat);
+  const update = {...old, 
+    output: [...old.output, "***[CONNECTED TO CHAT]***"],
+    connected: true
+  }
+  return await promiseSetRecoil(chat, update);  
+}
+
 export default updateChat;

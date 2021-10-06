@@ -12,10 +12,11 @@ const defaultProduct = {
 
 const defaultChat = {
   name: "anonymous",
-  output: ["welcome to the chat", ""],
+  output: ["...",],
   input: "",
   openForm: false,
   users: [],
+  connected: false
 };
 
 // Atom
@@ -137,12 +138,30 @@ const chat = selector({
   },
 });
 
+/**
+ * map of recoil state selectors
+ */
+const mapped = {
+  title: appTitle,
+  products: {
+    calls: requestCount,
+    format: productFormat,
+    openForm,
+    reload: reloadProducts,
+    select: productSelector,
+    unselect: productUnselector,
+    new: defaultProduct,
+  },
+  socket,
+  chat,
+};
+
 export {
   appState,
   productlist,
-  openForm,
-  reloadProducts,
+  openForm,  
   requestCount,
+  reloadProducts,
   appTitle,
   productFormat,
   productSelector,
@@ -151,3 +170,6 @@ export {
   socket,
   chat,
 };
+
+export default mapped; // this may be more legible
+

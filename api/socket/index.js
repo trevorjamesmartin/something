@@ -44,6 +44,35 @@ const wss = new WebSocketServer({
 // cache
 let clients = [];
 
+/**
+ * broadcast the userlist to all connected clients
+ */
+function broadcastNames() {
+  const userlist = loadSearchParams({
+    foo: "userlist",
+    names: [...clients.map((u) => u.name)],
+  });
+  wss.clients.forEach(function each(wsClient) {
+    // (public broadcast)
+    if (wsClient.readyState === OPEN && wsClient.session) {
+      wsClient.send(userlist.toString(), { binary: false });
+    }
+  });
+}
+
+/**
+ * broadcast 
+ * @param {*} data 
+ * @param {boolean} isBinary 
+ */
+function broadcast(data, isBinary) {
+  wss.clients.forEach(function each(wsClient) {
+    if (wsClient.readyState === OPEN && wsClient.session) {
+      wsClient.send(data, { binary: isBinary });
+    }
+  });
+}
+
 function registerClient(ip, name, key) {
   const existing = clients.find((client) => client.key === key);
   const others = clients.filter((client) => client.key !== key);
@@ -72,16 +101,58 @@ function addClient(ip, key, session, oldSession, oldName) {
   return true;
 }
 
+const pulseCheck = setInterval(function ping() {
+  let removed = 0;
+  wss.clients.forEach(function each(ws) {
+    if (ws.isAlive === false) {
+      // remove from list
+      console.log('removing ', ws?.clientKey);
+      clients = clients.filter(c=> c.clientKey !== ws.clientKey);
+      removed += 1;
+      return ws.terminate();
+    }
+    ws.isAlive = false;
+    ws.ping();
+  });
+  removed > 0 && broadcastNames();
+}, 3000);
+
+wss.on('close', function close() {
+  clearInterval(pulseCheck);
+})
+
+
 wss.on("connection", function connection(ws, req, client) {
   const ip = req.socket.remoteAddress;
   const clientKey = req.headers["sec-websocket-key"]; // changes at browser re-fresh
+  ws.isAlive = true; // initially set to true
+  ws.clientKey = clientKey;
+  
+  ws.on('pong', function heartbeat() {
+    ws.isAlive = true; // keep alive
+  });
+
+  ws.on('close', function (event) {
+    const closing = clients.find((c)=>c.key === ws.clientKey);
+    if(closing) {
+      console.log("GOODBYE, ", closing.name);
+      broadcast(loadSearchParams({
+        foo: 'chat',
+        name: '@channel',
+        data: `*** ${closing.name} disconnected ***`
+      }).toString(), false);
+      clients = clients.filter(c=> c.key !== ws.clientKey);
+      broadcastNames();
+    }
+    ws.isAlive = false;
+    ws.terminate();
+  });
 
   ws.on("message", function incoming(data, isBinary) {
     let msg, params, sessionKey;
     if (!isBinary) {
       msg = data.toString();
     }
-
     // ?
     if (msg?.startsWith("?")) {
       // reconstruct
@@ -98,6 +169,7 @@ wss.on("connection", function connection(ws, req, client) {
         );
         // update session ID
         sessionKey = randomUUID(); // random unique identification
+        ws.session = sessionKey;
         if (
           addClient(
             ip,
@@ -119,17 +191,12 @@ wss.on("connection", function connection(ws, req, client) {
         const alias = params.get("name");
         const session = registerClient(ip, alias, clientKey);
         if (session) {
-          console.log("[ws] Registered ", alias);
-          const userlist = loadSearchParams({
-            foo: "userlist",
-            names: [...clients.map((u) => u.name)],
-          });
-          wss.clients.forEach(function each(wsClient) {
-            // (public broadcast)
-            if (wsClient.readyState === OPEN) {
-              wsClient.send(userlist.toString(), { binary: false });
-            }
-          });
+          broadcast(loadSearchParams({
+            foo: 'chat',
+            name: '@channel',
+            data: `*** ${alias} joined the chat ***`
+          }).toString(), false);
+          broadcastNames(); // update public
           // update sender
           ws.send(
             loadSearchParams({
@@ -139,15 +206,11 @@ wss.on("connection", function connection(ws, req, client) {
             }).toString()
           );
         }
+        ws.send('ping');
         break;
 
       default:
-        // (public broadcast)
-        wss.clients.forEach(function each(wsClient) {
-          if (wsClient.readyState === OPEN) {
-            wsClient.send(data, { binary: isBinary });
-          }
-        });
+        broadcast(data, isBinary); // update public
         break;
     }
   });

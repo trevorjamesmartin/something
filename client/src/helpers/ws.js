@@ -1,4 +1,4 @@
-import updateChat, { updateChatNames } from "./state";
+import updateChat, { updateChatNames, connectionClosed, connectionOpened } from "./state";
 const hostname = window.location.hostname;
 const secureProtocol = window.location.href.startsWith("https");
 const wsURL = `${secureProtocol ? "wss" : "ws"}://${
@@ -7,14 +7,14 @@ const wsURL = `${secureProtocol ? "wss" : "ws"}://${
 const ws = new WebSocket(wsURL);
 
 /**
- * 
- * @param {URLSearchParams} params 
+ *
+ * @param {URLSearchParams} params
  * @returns {Object} jsonObj
  */
- function unLoadSearchParams(params) {
-  const keys = params.get('keys').split(',');
+function unLoadSearchParams(params) {
+  const keys = params.get("keys").split(",");
   const jsonObj = {};
-  keys.forEach(keyName => jsonObj[keyName] = params.get(keyName));
+  keys.forEach((keyName) => (jsonObj[keyName] = params.get(keyName)));
   return jsonObj;
 }
 
@@ -23,7 +23,7 @@ function intoStorage(jsonObj) {
     Object.keys(jsonObj).forEach((keyName) =>
       localStorage.setItem(keyName, jsonObj[keyName])
     );
-  } catch(error) {
+  } catch (error) {
     console.log(error.message);
   }
 }
@@ -40,7 +40,14 @@ ws.addEventListener("open", function (event) {
   params.set("name", oldName);
   console.log("reply, ", params.toString());
   ws.send(`?${params.toString()}`);
+  connectionOpened()
 });
+
+// PING
+ws.addEventListener("ping", () => ws.send("pong"));
+
+// CLOSE
+ws.addEventListener("close", () => connectionClosed);
 
 // listen for messages
 ws.addEventListener("message", async function (event) {
