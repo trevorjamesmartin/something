@@ -14,7 +14,7 @@
     "start": "npm run develop",
     "create-db": "cd api && npx knex migrate:latest && npx knex seed:run",
     "remove-db": "rm mnt/something.db",
-    "clean-api": "cd api && rm -rf node_modules && rm -rf public",
+    "clean-api": "cd api && rm -rf node_modules && rm -rf rest/public",
     "clean-client": "cd client && rm -rf node_modules && rm -rf build",
     "clean": "npm run clean-api && npm run clean-client && rm -rf node_modules",
     "first-run": "npm install && npm run create-db && npm start",
