@@ -6,6 +6,9 @@ import { useRecoilValue, useRecoilState } from "recoil";
 import { socket as socketState, chat as chatState } from "../../atoms";
 import ws from "../../helpers/ws";
 
+// style
+import { TextField, TextareaAutosize, Button, Divider } from "@mui/material";
+
 const ChatWindow = () => {
   const inputText = useRef(null);
   const chat = useRecoilValue(chatState);
@@ -49,6 +52,7 @@ const ChatWindow = () => {
 
   return (
     <>
+      <Divider variant="middle" sx={{ margin: "1rem" }} />
       <form onSubmit={say}>
         <div
           style={{
@@ -62,37 +66,47 @@ const ChatWindow = () => {
         </div>
         <br />
         <div>
-        <textarea
-          className="chat-area"
-          style={{ width: "84vw", height: "42vh" }}
-          value={chat.output?.join("\n")}
-          readOnly
-        />
-        <textarea
-          className="user-list"
-          style={{ width: "12vw", height: "42vh" }}
-          value={chat.users?.join('\n')}
-          readOnly
-        />
-        </div>
-        <br />
-        <label>
-          Chat:
-          <input
-            onFocus={(e) => e.currentTarget.select()}
-            value={chat.input}
-            style={{ width: "77vw" }}
-            onChange={(e) => {
-              e.preventDefault();
-              setChat((old) => ({ ...old, input: e.target.value }));
-            }}
+          <TextareaAutosize
+            className="chat-area"
+            value={chat.output?.join("\n")}
+            style={{ width: "84vw", height: "42vh" }}
+            readOnly
           />
-        </label>
-        <button type="submit">enter</button>
+          <TextareaAutosize
+            className="user-list"
+            style={{ width: "12vw", height: "42vh" }}
+            value={chat.users?.join("\n")}
+            readOnly
+          />
+          <Divider variant="middle" sx={{ margin: "1rem" }} />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-around",
+              alignItems: "center",
+            }}
+          >
+            <TextField
+              onFocus={(e) => e.currentTarget.select()}
+              value={chat.input}
+              style={{ width: "77vw" }}
+              placeholder="type something & press enter to send"
+              onChange={(e) => {
+                e.preventDefault();
+                setChat((old) => ({ ...old, input: e.target.value }));
+              }}
+            />
+            <Button type="submit">enter</Button>
+          </div>
+        </div>
       </form>
       <br />
-      <div style={{padding: "1rem"}}>
-      {window.location.href.startsWith('https') ? <QRCode value={window.location.href} /> : ""}
+      <div style={{ padding: "1rem" }}>
+        {window.location.href.startsWith("https") ? (
+          <QRCode value={window.location.href} />
+        ) : (
+          ""
+        )}
       </div>
     </>
   );
