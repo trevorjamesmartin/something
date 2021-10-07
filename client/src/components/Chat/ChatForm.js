@@ -23,7 +23,7 @@ const ChatForm = () => {
     openForm();
   }, [openForm]);
 
-  const handleChange = (e) => {
+  const changeName = (e) => {
     e.preventDefault();
     setState((s) => ({ ...s, name: e.target.value }));
   };
@@ -32,6 +32,9 @@ const ChatForm = () => {
     e.preventDefault();
     let params = new URLSearchParams();
     params.set("foo", "register"); // action
+    if (state.opt) {
+      params.set("opt", state.opt); // optional
+    }
     params.set("name", state.name); // detail
     // questionable content will need to be parsed
     let questionable = `?${params.toString()}`;
@@ -61,7 +64,7 @@ const ChatForm = () => {
               required
               helperText="nickname/alias"
               value={state.name}
-              onChange={handleChange}
+              onChange={changeName}
               placeholder="hackerman"
             />
           </div>

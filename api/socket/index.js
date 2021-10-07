@@ -61,9 +61,9 @@ function broadcastNames() {
 }
 
 /**
- * broadcast 
- * @param {*} data 
- * @param {boolean} isBinary 
+ * broadcast
+ * @param {*} data
+ * @param {boolean} isBinary
  */
 function broadcast(data, isBinary) {
   wss.clients.forEach(function each(wsClient) {
@@ -73,18 +73,29 @@ function broadcast(data, isBinary) {
   });
 }
 
-function registerClient(ip, name, key) {
+
+
+function registerClient(ip, name, key, opt) {
   const existing = clients.find((client) => client.key === key);
-  const others = clients.filter((client) => client.key !== key);
   if (!existing) {
     console.log("client didn't say Hello. How rude!");
     return false;
   }
+  let reply;
+  switch (opt) {
+    case "changed-name":
+      reply = `*** [${name}] was formerly known as [${existing?.name}] ***`;
+      break;
+    default:
+      reply = `*** [${name}] joined the chat ***`
+      break;
+  }
+  const others = clients.filter((client) => client.key !== key);
   // update client record
   existing["name"] = name;
   existing["ip"] = ip;
   clients = [...others, existing];
-  return existing.session;
+  return [existing.session, reply];
 }
 
 function addClient(ip, key, session, oldSession, oldName) {
@@ -93,7 +104,7 @@ function addClient(ip, key, session, oldSession, oldName) {
     clients = [...clients, { ip, key, session }];
   } else {
     // update existing client
-    console.log(oldName)
+    console.log(oldName);
     clients = clients.map((v) =>
       v.session === oldSession ? { ...v, ip, key, session } : v
     );
@@ -106,8 +117,8 @@ const pulseCheck = setInterval(function ping() {
   wss.clients.forEach(function each(ws) {
     if (ws.isAlive === false) {
       // remove from list
-      console.log('removing ', ws?.clientKey);
-      clients = clients.filter(c=> c.clientKey !== ws.clientKey);
+      console.log("removing ", ws?.clientKey);
+      clients = clients.filter((c) => c.clientKey !== ws.clientKey);
       removed += 1;
       return ws.terminate();
     }
@@ -117,31 +128,33 @@ const pulseCheck = setInterval(function ping() {
   removed > 0 && broadcastNames();
 }, 3000);
 
-wss.on('close', function close() {
+wss.on("close", function close() {
   clearInterval(pulseCheck);
-})
-
+});
 
 wss.on("connection", function connection(ws, req, client) {
   const ip = req.socket.remoteAddress;
   const clientKey = req.headers["sec-websocket-key"]; // changes at browser re-fresh
   ws.isAlive = true; // initially set to true
   ws.clientKey = clientKey;
-  
-  ws.on('pong', function heartbeat() {
+
+  ws.on("pong", function heartbeat() {
     ws.isAlive = true; // keep alive
   });
 
-  ws.on('close', function (event) {
-    const closing = clients.find((c)=>c.key === ws.clientKey);
-    if(closing) {
+  ws.on("close", function (event) {
+    const closing = clients.find((c) => c.key === ws.clientKey);
+    if (closing) {
       console.log("GOODBYE, ", closing.name);
-      broadcast(loadSearchParams({
-        foo: 'chat',
-        name: '@channel',
-        data: `*** ${closing.name} disconnected ***`
-      }).toString(), false);
-      clients = clients.filter(c=> c.key !== ws.clientKey);
+      broadcast(
+        loadSearchParams({
+          foo: "chat",
+          name: "@channel",
+          data: `*** ${closing.name} disconnected ***`,
+        }).toString(),
+        false
+      );
+      clients = clients.filter((c) => c.key !== ws.clientKey);
       broadcastNames();
     }
     ws.isAlive = false;
@@ -189,13 +202,17 @@ wss.on("connection", function connection(ws, req, client) {
         break;
       case "register":
         const alias = params.get("name");
-        const session = registerClient(ip, alias, clientKey);
+        const option = params.get("opt");
+        const [session, reply] = registerClient(ip, alias, clientKey, option);
         if (session) {
-          broadcast(loadSearchParams({
-            foo: 'chat',
-            name: '@channel',
-            data: `*** ${alias} joined the chat ***`
-          }).toString(), false);
+          broadcast(
+            loadSearchParams({
+              foo: "chat",
+              name: "@channel",
+              data: reply,
+            }).toString(),
+            false
+          );
           broadcastNames(); // update public
           // update sender
           ws.send(
@@ -206,10 +223,11 @@ wss.on("connection", function connection(ws, req, client) {
             }).toString()
           );
         }
-        ws.send('ping');
+        ws.send("ping");
         break;
 
       default:
+
         broadcast(data, isBinary); // update public
         break;
     }

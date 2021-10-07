@@ -9,8 +9,11 @@ import { chat } from "../atoms";
  */
 async function updateChat(params) {
   const old = await promiseGetRecoil(chat);
-  const newLine = `[${params.get("name")}] ${params.get("data")}`;
-  const output = [...old.output, newLine];
+  // const newLine = `[${params.get("name")}] ${params.get("data")}`;
+  const output = [
+    ...old.output,
+    { name: params.get("name"), data: params.get("data") },
+  ];
   const update = {
     ...old,
     output,
@@ -24,7 +27,10 @@ async function updateChat(params) {
  * @returns {Promise} Promise to update recoil state
  */
 export async function updateChatNames(params) {
-  const names = params.get("names")?.split(",").filter((v) => v.length > 0) || ["empty"];
+  const names = params
+    .get("names")
+    ?.split(",")
+    .filter((v) => v.length > 0) || ["empty"];
   const old = await promiseGetRecoil(chat);
   const update = {
     ...old,
@@ -35,21 +41,29 @@ export async function updateChatNames(params) {
 
 export async function connectionClosed() {
   const old = await promiseGetRecoil(chat);
-  const update = {...old, 
-    output: [...old.output, "***[CONNECTION CLOSED]***"],
+  const update = {
+    ...old,
+    output: [
+      ...old.output,
+      { name: "@", data: "***[CONNECTION CLOSED]***" },
+    ],
     users: [],
-    connected: false
-  }
-  return await promiseSetRecoil(chat, update);  
+    connected: false,
+  };
+  return await promiseSetRecoil(chat, update);
 }
 
 export async function connectionOpened() {
   const old = await promiseGetRecoil(chat);
-  const update = {...old, 
-    output: [...old.output, "***[CONNECTED TO CHAT]***"],
-    connected: true
-  }
-  return await promiseSetRecoil(chat, update);  
+  const update = {
+    ...old,
+    output: [
+      ...old.output,
+      { name: "@", data: "***[CONNECTED TO CHAT]***" },
+    ],
+    connected: true,
+  };
+  return await promiseSetRecoil(chat, update);
 }
 
 export default updateChat;

@@ -7,10 +7,22 @@ import { socket as socketState, chat as chatState } from "../../atoms";
 import ws from "../../helpers/ws";
 
 // style
-import { TextField, TextareaAutosize, Button, Divider } from "@mui/material";
+import {
+  TextField,
+  Box,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Avatar,
+  Typography,
+  Button,
+  Divider,
+} from "@mui/material";
 
 const ChatWindow = () => {
   const inputText = useRef(null);
+  const pageBottom = useRef(null);
   const chat = useRecoilValue(chatState);
   const [, setChat] = useRecoilState(chatState);
   const [, setSocket] = useRecoilState(socketState);
@@ -23,19 +35,25 @@ const ChatWindow = () => {
     [setSocket]
   );
 
+  function scrollToBottom() {
+    pageBottom.current.scrollIntoView({ behavior: "smooth" }); // scroll to bottom
+    inputText.current.focus(); // focus text input
+  }
   useEffect(() => {
-    if (inputText.current) {
-      inputText.current.focus();
+    if (pageBottom.current) {
+      console.log(chat.output)
+      scrollToBottom();
     }
     if (!websocket) {
       // connect to websocket
       cbSetSocket(ws);
       console.log("connected to websocket");
     }
-  }, [websocket, cbSetSocket]);
+  }, [websocket, cbSetSocket, chat.output]);
 
   function say(e) {
     e.preventDefault();
+    setTimeout(() => inputText.current.focus(), 300);
 
     // prepare data to be sent
     const params = new URLSearchParams();
@@ -45,9 +63,13 @@ const ChatWindow = () => {
 
     // clear input
     setChat((old) => ({ ...old, input: "" }));
-
+    scrollToBottom();
     // send data
     websocket?.send(params);
+  }
+
+  function changeNickname() {
+    setChat((s) => ({ ...s, openForm: true, opt: "changed-name" }));
   }
 
   return (
@@ -62,24 +84,62 @@ const ChatWindow = () => {
             marginLeft: "8vw",
           }}
         >
-          <label>[{chat.name}]</label>
+          <List
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              padding: 0,
+            }}
+          >
+            {[
+              ...chat.users.map((n, i) =>
+                n === chat.name ? (
+                  <ListItem key={i} onClick={changeNickname}>
+                    <Button>({chat.name})</Button>
+                  </ListItem>
+                ) : (
+                  <>
+                    <ListItem key={i}>
+                      <ListItemText>{n}</ListItemText>
+                    </ListItem>
+                  </>
+                )
+              ),
+            ]}
+          </List>
         </div>
         <br />
-        <div>
-          <TextareaAutosize
-            className="chat-area"
-            value={chat.output?.join("\n")}
-            style={{ width: "84vw", height: "42vh" }}
-            readOnly
-          />
-          <TextareaAutosize
-            className="user-list"
-            style={{ width: "12vw", height: "42vh" }}
-            value={chat.users?.join("\n")}
-            readOnly
-          />
+        <Box>
+          <List sx={{ width: "80vw", bgcolor: "background.paper" }}>
+            {[
+              ...chat.output.map((m, i) => (
+                  <ListItem alignItems="flex-start" key={i + 1}>
+                    <ListItemAvatar>
+                      <Avatar alt={m.name} src="/static/images/avatar/1.jpg" />
+                    </ListItemAvatar>
+                    <ListItemText
+                      // primary=""
+                      primary={
+                        <React.Fragment>
+                          <Typography
+                            sx={{ display: "inline" }}
+                            component="span"
+                            variant="body2"
+                            color="text.primary"
+                          >
+                            {m.name} {" - "}
+                          </Typography>
+                          {m.data}
+                        </React.Fragment>
+                      }
+                    />
+                  </ListItem>
+              )),
+            ]}
+          </List>
           <Divider variant="middle" sx={{ margin: "1rem" }} />
-          <div
+          <Box
+            className="chat-input"
             style={{
               display: "flex",
               justifyContent: "space-around",
@@ -87,27 +147,33 @@ const ChatWindow = () => {
             }}
           >
             <TextField
+              ref={inputText}
               onFocus={(e) => e.currentTarget.select()}
               value={chat.input}
               style={{ width: "77vw" }}
               placeholder="type something & press enter to send"
               onChange={(e) => {
                 e.preventDefault();
+                inputText.current.focus();
                 setChat((old) => ({ ...old, input: e.target.value }));
               }}
             />
             <Button type="submit">enter</Button>
-          </div>
-        </div>
+          </Box>
+        </Box>
       </form>
       <br />
-      <div style={{ padding: "1rem" }}>
+      <p ref={pageBottom} style={{ opacity: "0%" }}>
+        test
+      </p>
+      <Box class="qr-code-box" style={{ padding: "1rem" }}>
         {window.location.href.startsWith("https") ? (
           <QRCode value={window.location.href} />
         ) : (
           ""
         )}
-      </div>
+      </Box>
+
     </>
   );
 };

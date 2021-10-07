@@ -12,10 +12,11 @@ const defaultProduct = {
 
 const defaultChat = {
   name: "anonymous",
-  output: ["...",],
+  output: [{name: "@", data: "...🧐"},],
   input: "",
   openForm: false,
   users: [],
+  opt: null,
   connected: false
 };
 
