@@ -54,7 +54,7 @@
 
 @media only screen and (max-width: 720px) {
   .qr-code-box {
-    visibility: hidden;
+    display: none;
   }
   .div-products {
     flex-flow: column;
