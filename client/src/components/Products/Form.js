@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useRecoilState, useRecoilValue } from "recoil";
 
 import {
@@ -16,10 +16,12 @@ import useStyles from "../../hooks/useStyles";
 
 import { appState, productDefault } from "../../atoms";
 import { ProductListItem } from "./Product";
-import { submitNewProduct } from "../../helpers/api";
+import { submitNewProduct, uploadFile } from "../../helpers/api";
 
 const NewProduct = () => {
   const [state, setState] = useRecoilState(appState);
+  const [image, setImage] = useState(null);
+  const [lastUpload, setLastUpload] = useState(null);
   const defaultProduct = useRecoilValue(productDefault);
   const classes = useStyles();
   const handleChange = (e) =>
@@ -27,9 +29,29 @@ const NewProduct = () => {
       ...state,
       newProduct: { ...state.newProduct, [e.target.name]: e.target.value },
     });
+
+  const cbImageUpload = useCallback(
+    async function () {
+      if (lastUpload?.image === image) return;
+      const filedata = await uploadFile(image);
+      setLastUpload({ filedata, image });
+      setState((s) => ({
+        ...s,
+        newProduct: { ...s.newProduct, image_url: filedata.url },
+      }));
+      console.log(filedata?.url);
+    },
+    [image, setState, lastUpload]
+  );
+
+  useEffect(() => {
+    if (!image) return;
+    cbImageUpload();
+  }, [image, cbImageUpload]);
+
   const formSubmission = async (e) => {
     e.preventDefault();
-    console.log("create");
+    console.log("create", state);
     if (
       state.newProduct.type === "type" ||
       state.newProduct.format === "format"
@@ -38,7 +60,6 @@ const NewProduct = () => {
       return;
     }
     const product = { ...state.newProduct };
-    console.log(product);
     const result = await submitNewProduct(product);
     if (result.status === 201) {
       console.log("STATUS ", result.status);
@@ -48,7 +69,7 @@ const NewProduct = () => {
         ...state,
         openForm: false,
         products: [...state.products, product],
-        newProduct: defaultProduct
+        newProduct: defaultProduct,
       });
     }
   };
@@ -97,15 +118,16 @@ const NewProduct = () => {
               multiline={true}
               minRows={3}
             />
-            <TextField
-              name="image_url"
-              helperText="Image URL"
-              value={state.newProduct.image_url}
-              onChange={handleChange}
-              placeholder="https://something/my-great-product.png"
-            />
+            <Button variant="contained" component="label">
+              Upload Picture
+              <input
+                name="data"
+                type="file"
+                hidden
+                onChange={({ target }) => setImage(() => target.files[0])}
+              />
+            </Button>
           </div>
-          {/* replace with image uploader ? */}
           <div
             className="type-tags-format"
             style={{
@@ -123,7 +145,7 @@ const NewProduct = () => {
               sx={{ marginTop: "1rem", width: "100vw", maxWidth: 340 }}
             />
             <Select
-              className={classes.select} 
+              className={classes.select}
               required
               name="type"
               value={state.newProduct.type}
