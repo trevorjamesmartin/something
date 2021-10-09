@@ -4,37 +4,7 @@ const { Router } = require("express");
 const Media = require("./media-model");
 const router = Router();
 
-const { returnOnlyList, returnOnly } = require("./common");
-
-const PUBLIC = "rest/public";
-const BASEURL = "";
-
-const multer = require("multer");
-// const storage = multer.memoryStorage();
-const storage = multer.diskStorage({
-  // saving them to the public folder should allow us to serve them
-  destination: PUBLIC + "/images",
-  filename: (req, file, cb) => {
-    const filename = req.body.filename;
-    const ext = path.extname(file.originalname);
-    cb(null, `ul_${filename}${ext}`);
-  },
-});
-const upload = multer({
-  storage,
-  limits: {
-    fileSize: 15000000, // 1000000 Bytes = 1 MB
-  },
-  fileFilter(req, file, cb) {
-    if (!file.originalname.match(/\.(png|jpg|jpeg|gif)$/)) {
-      // upload only png and jpg format
-      return cb(
-        new Error("Please upload Image in format [png, jpg, jpeg, gif]")
-      );
-    }
-    cb(undefined, true);
-  },
-});
+const { returnOnlyList, returnOnly, upload, BASEURL, PUBLIC } = require("./common");
 
 /**
  * @swagger
