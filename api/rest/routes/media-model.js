@@ -31,7 +31,6 @@ function updateMedia(name, changes) {
 }
 
 function newMedia(record) {
-  console.log(record)
   // (perform an UPSERT) https://knexjs.org/#Builder-onConflict
   return db("media").insert(record).onConflict("name").merge();
 }
