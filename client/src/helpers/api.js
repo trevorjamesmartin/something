@@ -2,7 +2,7 @@ import axios from "axios";
 const HOST = process.env.HOST || "0.0.0.0";
 const PORT = process.env.PORT || 8080;
 const PUBLIC = "rest/public";
-const BASEURL =  (process.env.NODE_ENV === "production") ? "/" : `http://${HOST}:${PORT}`;
+const BASEURL =  (process.env.NODE_ENV === "production") ? "" : `http://${HOST}:${PORT}`;
 /**
  * development client
  * @param {string} host
