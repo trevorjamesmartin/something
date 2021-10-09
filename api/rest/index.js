@@ -35,6 +35,7 @@ const openapiSpecification = swaggerJsdoc({
     },
     servers: [
       { url: "http://localhost:8080/api", description: "development server" },
+      { url: `${process.env.API_URL}`, description: "API server" },
     ],
   },
   apis: ["./rest/routes/*.js"], // files containing annotations as above
