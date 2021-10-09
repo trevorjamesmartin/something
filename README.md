@@ -1,6 +1,15 @@
-# something
+# something 
 
-bored? make something. ok.
+
+## run
+
+with [Docker](https://www.docker.com/get-started) installed, you can download & run the [latest example container](https://hub.docker.com/r/trevorjmartin/something-webbed).
+
+```
+docker run -p 8080:8080 trevorjmartin/something-webbed
+```
+
+create a *docker-compose file to map volumes, ports, and environment variables. [*example](example-release.yml)
 
 #
 
@@ -33,11 +42,12 @@ _to deploy each piece seperately, you'll need to adjust your CI accordingly_
 
 ## building
 
-with Docker installed, we can build everything inside the latest node:lts-alpine container.
+everything builds inside the latest node:lts-alpine container.
 
 ![](.img/docker.png)
 
 the container is built from [the Official Node JS image](https://hub.docker.com/_/node)
+
 
 ```
 docker-compose build
@@ -78,8 +88,13 @@ __remove__ the sqlite3 db file
 npm run remove-db
 ```
 
+__remove__ the "build" target folder
+```
+npm run remove-build
+```
+
 # 
 
-## contributing
+## contribute
 
 fork it and make something awesome!
