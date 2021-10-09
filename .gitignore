@@ -124,4 +124,6 @@ mnt/*.db
 *.db
 
 # build files
-api/public
+api/rest/public
+# file uploads (development)
+mnt/upload

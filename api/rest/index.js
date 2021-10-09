@@ -12,6 +12,7 @@ const swaggerUi = require("swagger-ui-express");
 
 // local
 const productRouter = require("./routes/product-router");
+const mediaRouter = require("./routes/media-router");
 
 api.use(compression()); // compress page content to reduce size
 
@@ -33,10 +34,10 @@ const openapiSpecification = swaggerJsdoc({
       },
     },
     servers: [
-      { url: "http://localhost:8000", description: "development server" },
+      { url: "http://localhost:8080/api", description: "development server" },
     ],
   },
-  apis: ["./routes/*.js"], // files containing annotations as above
+  apis: ["./rest/routes/*.js"], // files containing annotations as above
 });
 api.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openapiSpecification));
 
@@ -51,7 +52,7 @@ api.use(express.json()); // built-in option
 
 // API routes
 api.use("/api/products", productRouter);
-
+api.use("/api/media", mediaRouter);
 // ...
 
 // HTML renders SPA from here, (app-wide cache settings)

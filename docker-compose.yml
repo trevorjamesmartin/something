@@ -6,3 +6,4 @@ services:
       - "8080:8080"
     volumes:
       - .:/app/mnt
+      - ./mnt/upload:/app/api/rest/public/images
