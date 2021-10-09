@@ -14,7 +14,7 @@
     "start": "npm run develop",
     "create-db": "cd api && npx knex migrate:latest && npx knex seed:run",
     "remove-db": "rm mnt/something.db",
-    "remove-uploads": "rm api/rest/public/images/ul_*",
+    "remove-build": "rm -rf api/rest/public",
     "clean-api": "cd api && rm -rf node_modules && rm -rf rest/public",
     "clean-client": "cd client && rm -rf node_modules && rm -rf build",
     "clean": "npm run clean-api && npm run clean-client && rm -rf node_modules",
