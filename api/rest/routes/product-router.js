@@ -2,21 +2,8 @@ const { Router } = require("express");
 const Product = require("./product-model");
 const router = Router();
 
-// sqlite doesn't support .returning(['name', 'etc'])
-// quick filter (things the client wouldn't need to see)
-not_visible = ["deleted"];
+const { returnVisible, returnVisibles } = require("./common");
 
-async function returnVisible(product) {
-  if (!product) return {};
-  const filtered_copy = product;
-  await not_visible.forEach((c) => delete filtered_copy[c]);
-  return filtered_copy;
-}
-
-async function returnVisibles(products) {
-  const filtered_list = await Promise.all(products.map(returnVisible));
-  return filtered_list;
-}
 
 /**
  * @swagger
@@ -359,7 +346,7 @@ router.put("/_trash/:id", async (req, res, nxt) => {
  */
 router.put("/_restore/:id", async (req, res, nxt) => {
   const { id } = req.params;
-  console.log('restore', id)
+  console.log("restore", id);
   if (id) {
     const result = await Product.put.Restore(id);
     console.log("RESULT", result);
@@ -380,7 +367,7 @@ router.put("/_restore/:id", async (req, res, nxt) => {
  *     responses:
  *       200:
  *         description: Trash empty
- * 
+ *
  * /products/_trash/{id}:
  *   delete:
  *     summary: delete product with {id}
@@ -401,7 +388,7 @@ router.put("/_restore/:id", async (req, res, nxt) => {
 router.delete(["/_trash", "/_trash/:id"], async (req, res, nxt) => {
   const { id } = req.params;
   const result = await Product.delete.Trash(id);
-  console.log("DELETE ", result)
+  console.log("DELETE ", result);
   res.status(200).json(result);
 });
 
