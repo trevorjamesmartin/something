@@ -3,9 +3,10 @@ services:
     image: something-webbed
     build: .
     ports:
-      - "8080:8080"
+      - "420:420"
     environment:
-      - API_URL=https://your/api
+      - API_URL=https://localhost/api
+      - CONTAINER_PORT=420
     volumes:
       - ./mnt:/app/mnt
       - ./mnt/upload:/app/api/rest/public/images

@@ -16,6 +16,8 @@ const mediaRouter = require("./routes/media-router");
 
 api.use(compression()); // compress page content to reduce size
 
+const PORT = process.env.CONTAINER_PORT || "8080";
+
 // swagger
 const openapiSpecification = swaggerJsdoc({
   swaggerDefinition: {
@@ -34,7 +36,7 @@ const openapiSpecification = swaggerJsdoc({
       },
     },
     servers: [
-      { url: "http://localhost:8080/api", description: "development server" },
+      { url: `http://localhost:${PORT}/api`, description: "development server" },
       { url: `${process.env.API_URL}`, description: "API server" },
     ],
   },

@@ -1,10 +1,14 @@
-import updateChat, { updateChatNames, connectionClosed, connectionOpened } from "./state";
-const hostname = window.location.hostname;
-const secureProtocol = window.location.href.startsWith("https");
-const wsURL = `${secureProtocol ? "wss" : "ws"}://${
-  secureProtocol ? window.location.host : hostname + ":8080"
-}/ws`;
-const ws = new WebSocket(wsURL);
+import updateChat, {
+  updateChatNames,
+  connectionClosed,
+  connectionOpened,
+} from "./state";
+
+function connectWebSocket() {
+  return new WebSocket(`${window.location.href.startsWith("https") ? "wss" : "ws"}://${window.location.host}/ws`);
+}
+
+const ws = connectWebSocket();
 
 /**
  *
@@ -40,7 +44,7 @@ ws.addEventListener("open", function (event) {
   params.set("name", oldName);
   console.log("reply, ", params.toString());
   ws.send(`?${params.toString()}`);
-  connectionOpened()
+  connectionOpened();
 });
 
 // PING

@@ -1,10 +1,11 @@
 services:
   web:
-    image: trevorjmartin/something-webbed
+    image: something-webbed:latest
     ports:
-      - "8080:8080"
+      - 80:80
     environment:
-      - API_URL=https://yourdomain/api
+      - API_URL=http://localhost/api
+      - CONTAINER_PORT=80
     volumes:
       - ./mnt:/app/mnt
       - ./mnt/upload:/app/api/rest/public/images

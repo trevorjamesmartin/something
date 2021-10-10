@@ -44,7 +44,8 @@ RUN cd /app/api && npx knex seed:run
 RUN cd /app && tar cvf something.tar api && gzip something.tar
 
 # expose the express api port
-EXPOSE 8080
+ENV CONTAINER_PORT=420
+EXPOSE ${CONTAINER_PORT}
 
 # run express in production mode
 ENV NODE_ENV=production
