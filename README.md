@@ -1,5 +1,7 @@
 # something 
 
+[something's running in the cloud.](https://trevor.cloud)
+
 
 ## run
 
@@ -13,7 +15,7 @@ create a *docker-compose file to map volumes, ports, and environment variables. 
 
 #
 
-## developing
+## developing...
 
 on first run, you'll need to initialize the database & install dependencies.
 ```
@@ -40,7 +42,7 @@ _to deploy each piece seperately, you'll need to adjust your CI accordingly_
 
 #
 
-## building
+## building,
 
 everything builds inside the latest node:lts-alpine container.
 
