@@ -1,7 +1,7 @@
 const { server } = require("./socket");
 // const { api: server } = require("./rest");
 
-const port = process.env.CONTAINER_PORT;
+const port = process.env.CONTAINER_PORT || "8080";
 const host = process.env.HOST || "0.0.0.0";
 
 //serve it up
