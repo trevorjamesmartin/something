@@ -21,6 +21,7 @@ import { submitNewProduct, uploadFile } from "../../helpers/api";
 const NewProduct = () => {
   const [state, setState] = useRecoilState(appState);
   const [image, setImage] = useState(null);
+  const [preview, setPreview] = useState(null);
   const [lastUpload, setLastUpload] = useState(null);
   const defaultProduct = useRecoilValue(productDefault);
   const classes = useStyles();
@@ -33,25 +34,41 @@ const NewProduct = () => {
   const cbImageUpload = useCallback(
     async function () {
       if (lastUpload?.image === image) return;
-      const filedata = await uploadFile(image);
-      setLastUpload({ filedata, image });
-      setState((s) => ({
-        ...s,
-        newProduct: { ...s.newProduct, image_url: filedata.url },
-      }));
-      console.log(filedata?.url);
+      // read image
+      const reader = new FileReader();
+      reader.readAsDataURL(image);
+      reader.onload = function (event) {
+        // create image element
+        const imgElement = document.createElement("img");
+        imgElement.src = event.target.result;
+        imgElement.onload = function (e) {
+          // create canvas element to resize the image
+          const canvas = document.createElement("canvas");
+          const max_width = process.env.MAX_IMAGE_WIDTH || 420;
+          // keep aspect ration when scaling
+          const scaler = max_width / e.target.width;
+          canvas.width = max_width;
+          canvas.height = e.target.height * scaler;
+          // redraw at scale & capture as jpeg
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(e.target, 0, 0, canvas.width, canvas.height);
+          const srcEncoded = ctx.canvas.toDataURL("image/jpeg");
+          // store result in preview space
+          setPreview(srcEncoded);
+          console.log(srcEncoded);
+        };
+      };
     },
-    [image, setState, lastUpload]
+    [image, lastUpload]
   );
 
   useEffect(() => {
     if (!image) return;
-    cbImageUpload();
+    cbImageUpload(); // ready image for upload
   }, [image, cbImageUpload]);
 
   const formSubmission = async (e) => {
     e.preventDefault();
-    console.log("create", state);
     if (
       state.newProduct.type === "type" ||
       state.newProduct.format === "format"
@@ -59,18 +76,45 @@ const NewProduct = () => {
       alert("Product type & format required"); // todo
       return;
     }
-    const product = { ...state.newProduct };
-    const result = await submitNewProduct(product);
+    // convert resized image to blob
+    const splitDataURI = preview.split(",");
+    const byteString =
+      splitDataURI[0].indexOf("base64") >= 0
+        ? window.atob(splitDataURI[1])
+        : decodeURI(splitDataURI[1]);
+    // image/jpeg
+    const mimeString = splitDataURI[0].split(":")[1].split(";")[0];
+    const ia = new Uint8Array(byteString.length);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    const jpeg = new Blob([ia], { type: mimeString });
+    // upload the resized product image
+    const filedata = await uploadFile(jpeg);
+    console.log(filedata);
+    const newProduct = await new Promise((resolve, reject) => {
+      let newProduct = { ...state.newProduct, image_url: filedata.url, id: 0 };
+      setLastUpload({ filedata, image });
+      setState((s) => ({ ...s, newProduct }));
+      console.log("product image uploaded to ", newProduct.image_url);
+      resolve(newProduct);
+    });
+    if (!newProduct || newProduct?.error) {
+      return "ERROR";
+    }
+    console.log("NEW ", newProduct);
+    const result = await submitNewProduct({ ...newProduct });
+    const id = result?.data?.pop() || 0;
     if (result.status === 201) {
-      console.log("STATUS ", result.status);
-      product["id"] = result?.data?.pop() || 0;
-      console.log(product);
       setState({
         ...state,
         openForm: false,
-        products: [...state.products, product],
+        products: [...state.products, { ...newProduct, id }],
         newProduct: defaultProduct,
       });
+      console.log("a new product was submitted");
+    } else {
+      console.log(result);
     }
   };
   return (
@@ -85,6 +129,7 @@ const NewProduct = () => {
           name={state.newProduct.name}
           description={state.newProduct.description}
           image_url={state.newProduct.image_url || "/mj.jpg"}
+          preview_image={preview}
           type={state.newProduct.type}
           tags={state.newProduct.tags}
           selected={false}

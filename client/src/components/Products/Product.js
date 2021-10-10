@@ -110,6 +110,7 @@ export const ProductListItem = ({
   type,
   tags,
   selected,
+  preview_image
 }) => {
   // mui toggler
   const [expanded, setExpanded] = useState(false);
@@ -149,7 +150,8 @@ export const ProductListItem = ({
       <CardMedia
         component="img"
         height="194"
-        image={image_url}
+        src={preview_image}
+        image={preview_image ? undefined : image_url}
         alt={"image of " + name + " medicinal plant"}
       />
       <CardContent>
