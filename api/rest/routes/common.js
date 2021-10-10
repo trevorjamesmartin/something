@@ -1,6 +1,5 @@
 // sqlite doesn't support .returning(['name', 'etc'])
 // quick filter (things the client wouldn't need to see)
-const path = require('path');
 const not_visible = ["deleted", "last_modified"];
 
 async function returnVisible(record, columns = []) {
@@ -42,10 +41,9 @@ const storage = multer.diskStorage({
   // saving them to the public folder should allow us to serve them
   destination: PUBLIC + "/images",
   filename: (req, file, cb) => {
-    const filename = req.body.filename;
-    const ext = path.extname(file.originalname);
-    const fname = path.basename(req.body.filename).split('.')[0];
-    cb(null, `ul_${fname}${ext}`);
+    const fname = Date.now().toString();
+    const ext = file.mimetype.split("/")[1];
+    cb(null, `ul_${fname}.${ext}`);
   },
 });
 const upload = multer({
@@ -54,7 +52,7 @@ const upload = multer({
     fileSize: 15000000, // 1000000 Bytes = 1 MB
   },
   fileFilter(req, file, cb) {
-    if (!file.originalname.match(/\.(png|jpg|jpeg|gif)$/)) {
+    if (!file.mimetype.match(/\image\/(png|jpg|jpeg|gif)$/)) {
       // upload only png and jpg format
       return cb(
         new Error("Please upload Image in format [png, jpg, jpeg, gif]")
@@ -64,4 +62,12 @@ const upload = multer({
   },
 });
 
-module.exports = { returnVisible, returnVisibles, returnOnly, returnOnlyList, PUBLIC, BASEURL, upload };
+module.exports = {
+  returnVisible,
+  returnVisibles,
+  returnOnly,
+  returnOnlyList,
+  PUBLIC,
+  BASEURL,
+  upload,
+};
