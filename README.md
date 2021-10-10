@@ -6,7 +6,7 @@
 with [Docker](https://www.docker.com/get-started) installed, you can download & run the [latest example container](https://hub.docker.com/r/trevorjmartin/something-webbed).
 
 ```
-docker run -p 8080:8080 trevorjmartin/something-webbed
+docker run -p 80:80 -e CONTAINER_PORT=80 trevorjmartin/something-webbed:latest
 ```
 
 create a *docker-compose file to map volumes, ports, and environment variables. [*example](example-release.yml)
