@@ -68,7 +68,7 @@ api.use((req, res, next) => {
       "Origin, X-Requested-With, Content-Type, Accept",
     "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
     "Content-Security-Policy":
-      "default-src *; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://www.google.com",
+      "style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline' 'unsafe-eval' http://www.google.com",
     "X-Content-Security-Policy": "default-src *",
     "X-WebKit-CSP": "default-src *",
   });
