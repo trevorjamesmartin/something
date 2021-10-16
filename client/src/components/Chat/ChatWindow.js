@@ -41,7 +41,7 @@ const ChatWindow = () => {
   }
   useEffect(() => {
     if (pageBottom.current) {
-      console.log(chat.output)
+      // console.log(chat.output)
       scrollToBottom();
     }
     if (!websocket) {
@@ -91,20 +91,22 @@ const ChatWindow = () => {
               padding: 0,
             }}
           >
-            {[
-              ...chat.users.map((n, i) =>
-                n === chat.name ? (
-                  <ListItem key={i} onClick={changeNickname}>
+            {chat?.users && [
+              ...chat?.users?.map((n) => (
+                <React.Fragment key={n.id}>
+                  {n.name === chat.name ? (
+                  <ListItem onClick={changeNickname}>
                     <Button>({chat.name})</Button>
                   </ListItem>
-                ) : (
+                  ) : (
                   <>
-                    <ListItem key={i}>
-                      <ListItemText>{n}</ListItemText>
+                    <ListItem>
+                      <ListItemText>{n.name}</ListItemText>
                     </ListItem>
                   </>
-                )
-              ),
+                  )}
+                </React.Fragment>
+              )),
             ]}
           </List>
         </div>
@@ -113,9 +115,10 @@ const ChatWindow = () => {
           <List sx={{ width: "80vw", bgcolor: "background.paper" }}>
             {[
               ...chat.output.map((m, i) => (
-                  <ListItem alignItems="flex-start" key={i + 1}>
+                <React.Fragment key={i}>
+                  <ListItem key={i + 1} alignItems="flex-start">
                     <ListItemAvatar>
-                      <Avatar alt={m.name} src="/static/images/avatar/1.jpg" />
+                      <Avatar alt={m?.name || "*"} src="/static/images/avatar/1.jpg" />
                     </ListItemAvatar>
                     <ListItemText
                       // primary=""
@@ -127,13 +130,14 @@ const ChatWindow = () => {
                             variant="body2"
                             color="text.primary"
                           >
-                            {m.name} {" - "}
+                            {m?.name} {" - "}
                           </Typography>
-                          {m.data}
+                          {m?.data}
                         </React.Fragment>
                       }
                     />
                   </ListItem>
+                </React.Fragment>
               )),
             ]}
           </List>
@@ -166,14 +170,13 @@ const ChatWindow = () => {
       <p ref={pageBottom} style={{ opacity: "0%" }}>
         test
       </p>
-      <Box class="qr-code-box" style={{ padding: "1rem" }}>
+      <Box className="qr-code-box" style={{ padding: "1rem" }}>
         {window.location.href.startsWith("https") ? (
           <QRCode value={window.location.href} />
         ) : (
           ""
         )}
       </Box>
-
     </>
   );
 };
