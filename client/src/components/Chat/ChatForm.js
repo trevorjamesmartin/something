@@ -39,7 +39,7 @@ const ChatForm = () => {
     // questionable content will need to be parsed
     let questionable = `?${params.toString()}`;
     // register our name with server.
-    websocket.send(questionable);
+    await websocket?.send(questionable);
     // wait for a reply ?
     if (!state.name || state.name === "anonymous") {
       console.log("please choose another name.");
