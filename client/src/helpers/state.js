@@ -1,4 +1,5 @@
 import { promiseGetRecoil, promiseSetRecoil } from "recoil-outside";
+// import { loadPortable } from "./ws";
 import { chat } from "../atoms";
 
 /**
@@ -9,7 +10,6 @@ import { chat } from "../atoms";
  */
 async function updateChat(params) {
   const old = await promiseGetRecoil(chat);
-  // const newLine = `[${params.get("name")}] ${params.get("data")}`;
   const output = [
     ...old.output,
     { name: params.get("name"), data: params.get("data") },
@@ -21,32 +21,61 @@ async function updateChat(params) {
   return await promiseSetRecoil(chat, update);
 }
 
-/**
- * Update list of chat users
- * @param {URLSearchParams} params include a list of 'names'
- * @returns {Promise} Promise to update recoil state
- */
-export async function updateChatNames(params) {
-  const names = params
-    .get("names")
-    ?.split(",")
-    .filter((v) => v.length > 0) || ["empty"];
+export async function loadChatHistory({ chatlog, users }) {
   const old = await promiseGetRecoil(chat);
-  const update = {
-    ...old,
-    users: names,
-  };
+  return await promiseSetRecoil(chat, { ...old, output: chatlog, users });
+}
+
+export async function updateChatHistory({ chatlog, users }) {
+  if (!chatlog && !users) {
+    return;
+  }
+  // update local chatlog
+  const old = await promiseGetRecoil(chat);
+  const upd =
+    chatlog?.map((s) => {
+      const usp = new URLSearchParams(s);
+      let name = usp.get("name");
+      let data = usp.get("data");
+      return { name, data };
+    }) || [];
+  let update = { ...old, output: [...upd] };
+  if (users) {
+    update["users"] = users;
+  }
   return await promiseSetRecoil(chat, update);
+}
+
+export async function addUserNamed({ name, id }) {
+  let state = await promiseGetRecoil(chat);
+  let updates = false;
+  let users = [];
+  await state.users.forEach((u) => {
+    if (u.id === id) {
+      updates = true;
+      users.push({ name, id });
+    } else {
+      users.push(u);
+    }
+  });
+  if (!updates) {
+    await users.push({ name, id });
+  }
+  return await promiseSetRecoil(chat, { ...state, users });
+}
+
+export async function removeUser({ id }) {
+  const c = await promiseGetRecoil(chat);
+  return await promiseSetRecoil(chat, {
+    ...c,
+    users: c.users.filter((u) => u.id !== id),
+  });
 }
 
 export async function connectionClosed() {
   const old = await promiseGetRecoil(chat);
   const update = {
     ...old,
-    output: [
-      ...old.output,
-      { name: "@", data: "***[CONNECTION CLOSED]***" },
-    ],
     users: [],
     connected: false,
   };
@@ -57,10 +86,6 @@ export async function connectionOpened() {
   const old = await promiseGetRecoil(chat);
   const update = {
     ...old,
-    output: [
-      ...old.output,
-      { name: "@", data: "***[CONNECTED TO CHAT]***" },
-    ],
     connected: true,
   };
   return await promiseSetRecoil(chat, update);
