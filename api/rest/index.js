@@ -11,8 +11,10 @@ const swaggerJsdoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 
 // local
+const { logMiddleware } = require("../middleware/logger");
 const productRouter = require("./routes/product-router");
 const mediaRouter = require("./routes/media-router");
+const cacheRouter = require("./routes/cache-router");
 
 api.use(compression()); // compress page content to reduce size
 
@@ -36,7 +38,10 @@ const openapiSpecification = swaggerJsdoc({
       },
     },
     servers: [
-      { url: `http://localhost:${PORT}/api`, description: "development server" },
+      {
+        url: `http://localhost:${PORT}/api`,
+        description: "development server",
+      },
       { url: `${process.env.API_URL}`, description: "API server" },
     ],
   },
@@ -54,8 +59,10 @@ api.use(cors()); // necessary
 api.use(express.json()); // built-in option
 
 // API routes
+api.use(logMiddleware);
 api.use("/api/products", productRouter);
 api.use("/api/media", mediaRouter);
+api.use("/api/cache", cacheRouter);
 // ...
 
 // HTML renders SPA from here, (app-wide cache settings)
@@ -80,4 +87,4 @@ api.use(function (req, res) {
   res.sendFile(path.join(__dirname, "public", "something-else.html"));
 });
 
-module.exports = { api }
+module.exports = { api };
