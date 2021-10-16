@@ -1,22 +1,13 @@
 const { randomUUID } = require("crypto");
 const { createServer } = require("http");
 
+const { log } = require("../middleware/logger");
+const redisCache = require("../middleware/redisCache");
+
 const { WebSocketServer, OPEN } = require("ws");
 const { api } = require("../rest");
 const server = createServer(api);
-
-/**
- *
- * @param {Object} jsonObj
- * @returns {URLSearchParams} params loaded with jsonObj
- */
-function loadSearchParams(jsonObj) {
-  const keys = Object.keys(jsonObj);
-  params = new URLSearchParams();
-  params.set("keys", keys);
-  keys.forEach((keyName) => params.set(keyName, jsonObj[keyName]));
-  return params;
-}
+const { portable, loadPortable } = require("./loaders");
 
 const wss = new WebSocketServer({
   server,
@@ -41,23 +32,87 @@ const wss = new WebSocketServer({
   },
 });
 
-// cache
+/**
+ * middleware/redisCache
+ *
+ * @returns undefined or Redis cache middleware
+ */
+function getCache() {
+  // undefined without REDIS_HOST
+  return redisCache?.cache;
+}
+
+let cache = getCache();
+// const CHAT_CLIENTS = "SOMETHING-CHAT-CLIENTS"; // KEYNAME
+// chat clients
 let clients = [];
 
+function addClient(ip, key, session, oldSession, oldName) {
+  if (!clients.find((v) => v.session === oldSession)) {
+    // add new client
+    log("add new client");
+    clients = [...clients, { ip, key, session, id: randomUUID() }];
+  } else {
+    // update existing client
+    log("update existing", oldName);
+    clients = clients.map((v) =>
+      v.session === oldSession ? { ...v, ip, key, session } : v
+    );
+  }
+  return true;
+}
+
+function getClients(cb) {
+  // not sure if/when these should be cached
+  return cb(clients);
+}
+
 /**
- * broadcast the userlist to all connected clients
+ * remove the client with clientKey from list of clients
+ * @param {string} clientKey
+ * @returns client
  */
-function broadcastNames() {
-  const userlist = loadSearchParams({
-    foo: "userlist",
-    names: [...clients.map((u) => u.name)],
-  });
+function removeClient(clientKey) {
+  let c = clients.find((client) => client.key === clientKey);
+  clients = clients.filter((client) => client.key !== clientKey);
+  return c;
+}
+
+function addSubscriber(clientKey, subscriber) {
+  let existing = clients.find((client) => client.key === clientKey);
+  let others = clients.filter((client) => client.key !== clientKey);
+  existing = { ...existing, subscriber };
+  clients = [...others, existing];
+}
+
+async function leavesChannel({ ip, key, session, id, name }) {
+  let msg = portable({ foo: "@leaves", name, id }).toString();
+  let c = removeClient(key);
+  cache && c?.subscriber.quit(); // unsubscribe
   wss.clients.forEach(function each(wsClient) {
-    // (public broadcast)
     if (wsClient.readyState === OPEN && wsClient.session) {
-      wsClient.send(userlist.toString(), { binary: false });
+      wsClient.send(msg, { binary: false });
     }
   });
+}
+
+function joinsChannel({ name, option, id }) {
+  wss.clients.forEach(function each(wsClient) {
+    if (wsClient.readyState === OPEN && wsClient.session) {
+      wsClient.send(portable({ foo: "@joins", name, option, id }).toString(), {
+        binary: false,
+      });
+    }
+  });
+}
+
+let broadCasted = [];
+
+const LIMIT_BROADCASTED = 7;
+const CHAT_CHANNEL = "SOMETHING-CHAT-CHANNEL"; // KEYNAME
+
+function getChatLog(returnLog) {
+  returnLog(broadCasted);
 }
 
 /**
@@ -66,50 +121,48 @@ function broadcastNames() {
  * @param {boolean} isBinary
  */
 function broadcast(data, isBinary) {
-  wss.clients.forEach(function each(wsClient) {
-    if (wsClient.readyState === OPEN && wsClient.session) {
-      wsClient.send(data, { binary: isBinary });
-    }
-  });
-}
-
-
-
-function registerClient(ip, name, key, opt) {
-  const existing = clients.find((client) => client.key === key);
-  if (!existing) {
-    console.log("client didn't say Hello. How rude!");
-    return false;
-  }
-  let reply;
-  switch (opt) {
-    case "changed-name":
-      reply = `*** [${name}] was formerly known as [${existing?.name}] ***`;
-      break;
-    default:
-      reply = `*** [${name}] joined the chat ***`
-      break;
-  }
-  const others = clients.filter((client) => client.key !== key);
-  // update client record
-  existing["name"] = name;
-  existing["ip"] = ip;
-  clients = [...others, existing];
-  return [existing.session, reply];
-}
-
-function addClient(ip, key, session, oldSession, oldName) {
-  if (!clients.find((v) => v.session === oldSession)) {
-    // add new client
-    clients = [...clients, { ip, key, session }];
-  } else {
-    // update existing client
-    console.log(oldName);
-    clients = clients.map((v) =>
-      v.session === oldSession ? { ...v, ip, key, session } : v
+  broadCasted.length >= LIMIT_BROADCASTED && broadCasted.shift();
+  broadCasted.push(data.toString());
+  if (cache?.isConnected()) {
+    // O(1)
+    cache.publish(
+      CHAT_CHANNEL,
+      portable({ [CHAT_CHANNEL]: data.toString() }).toString()
     );
+  } else {
+    // O(n)
+    wss.clients.forEach(function each(wsClient) {
+      if (wsClient.readyState === OPEN && wsClient.session) {
+        wsClient.send(data, { binary: isBinary });
+      }
+    });
   }
-  return true;
+}
+
+function registerClient(ip, name, key, opt, returnCall) {
+  getClients(function (existingClients) {
+    const existing = existingClients.find((client) => client.key === key);
+    if (!existing) {
+      return returnCall(false, 0, "missing initial handshake");
+    }
+    let reply;
+    switch (opt) {
+      case "changed-name":
+        reply = `*** [${name}] was formerly known as [${existing?.name}] ***`;
+        break;
+      default:
+        reply = `*** [${name}] joined the chat ***`;
+        break;
+    }
+    const others = existingClients.filter((client) => client.key !== key);
+    // update client record
+    existing["name"] = name;
+    existing["ip"] = ip;
+    // update clients
+    clients = [...others, existing];
+    // return with id
+    returnCall(existing["session"], existing["id"], reply); // send back the return value
+  });
 }
 
 const pulseCheck = setInterval(function ping() {
@@ -117,7 +170,12 @@ const pulseCheck = setInterval(function ping() {
   wss.clients.forEach(function each(ws) {
     if (ws.isAlive === false) {
       // remove from list
-      console.log("removing ", ws?.clientKey);
+      log("removing ", ws?.clientKey);
+      if (cache) {
+        clients
+          .find((client) => client.key === ws?.clientKey)
+          ?.subscriber.quit(); // unsubscribe if cache was enabled.
+      }
       clients = clients.filter((c) => c.clientKey !== ws.clientKey);
       removed += 1;
       return ws.terminate();
@@ -125,7 +183,7 @@ const pulseCheck = setInterval(function ping() {
     ws.isAlive = false;
     ws.ping();
   });
-  removed > 0 && broadcastNames();
+  removed > 0 && log(`removed ${removed} dead connection(s)`);
 }, 3000);
 
 wss.on("close", function close() {
@@ -142,20 +200,11 @@ wss.on("connection", function connection(ws, req, client) {
     ws.isAlive = true; // keep alive
   });
 
-  ws.on("close", function (event) {
+  ws.on("close", async function (event) {
+    log(`event ${event}`);
     const closing = clients.find((c) => c.key === ws.clientKey);
     if (closing) {
-      console.log("GOODBYE, ", closing.name);
-      broadcast(
-        loadSearchParams({
-          foo: "chat",
-          name: "@channel",
-          data: `*** ${closing.name} disconnected ***`,
-        }).toString(),
-        false
-      );
-      clients = clients.filter((c) => c.key !== ws.clientKey);
-      broadcastNames();
+      await leavesChannel(closing);
     }
     ws.isAlive = false;
     ws.terminate();
@@ -166,7 +215,6 @@ wss.on("connection", function connection(ws, req, client) {
     if (!isBinary) {
       msg = data.toString();
     }
-    // ?
     if (msg?.startsWith("?")) {
       // reconstruct
       params = new URLSearchParams(msg.slice(1)); // params
@@ -175,59 +223,75 @@ wss.on("connection", function connection(ws, req, client) {
     // see also: client/src/helpers/ws.js
     switch (msg) {
       case "yo":
-        console.log(
-          `[ws] connection from ${ip}; last connnection: ${params.get(
-            "session"
-          )}`
-        );
         // update session ID
-        sessionKey = randomUUID(); // random unique identification
+        sessionKey = randomUUID();
         ws.session = sessionKey;
-        if (
-          addClient(
-            ip,
-            clientKey,
-            sessionKey,
-            params.get("session"),
-            params.get("name")
-          )
-        ) {
-          ws.send(
-            loadSearchParams({
-              foo: "yo",
-              session: sessionKey,
-            }).toString()
-          );
-        }
+        addClient(
+          ip,
+          clientKey,
+          sessionKey,
+          params.get("session"),
+          params.get("name")
+        );
+        // ask client to register
+        ws.send(
+          portable({
+            foo: "yo?",
+            session: sessionKey,
+          }).toString()
+        );
         break;
       case "register":
         const alias = params.get("name");
         const option = params.get("opt");
-        const [session, reply] = registerClient(ip, alias, clientKey, option);
-        if (session) {
-          broadcast(
-            loadSearchParams({
-              foo: "chat",
-              name: "@channel",
-              data: reply,
-            }).toString(),
-            false
-          );
-          broadcastNames(); // update public
-          // update sender
-          ws.send(
-            loadSearchParams({
-              foo: "yo",
-              session: session,
-              name: alias,
-            }).toString()
-          );
-        }
-        ws.send("ping");
+        registerClient(
+          ip,
+          alias,
+          clientKey,
+          option,
+          async function (session, id, reply) {
+            log(reply);
+            joinsChannel({ name: alias, option, id });
+            if (cache?.isConnected()) {
+              // create a subscriber
+              let s = await cache.createSubscription(
+                CHAT_CHANNEL,
+                function reply(message) {
+                  let data = loadPortable(message)[CHAT_CHANNEL];
+                  let usp = new URLSearchParams(data);
+                  ws.send(usp.toString());
+                },
+                (error) => log("[error] ->", error)
+              );
+
+              addSubscriber(clientKey, s);
+            }
+            getClients(function (clientList) {
+              const users = clientList.map((cli) => ({
+                id: cli.id,
+                name: cli.name,
+              }));
+              getChatLog(async function (chatlog) {
+                // send response
+                ws.send(
+                  portable({
+                    foo: "yo?",
+                    session,
+                    name: alias,
+                    id,
+                    chatlog,
+                    users,
+                  }).toString(),
+                  { binary: false }
+                );
+              });
+              ws.send("ping");
+            });
+          }
+        );
         break;
 
       default:
-
         broadcast(data, isBinary); // update public
         break;
     }
