@@ -115,13 +115,14 @@ const { returnVisible, returnVisibles } = require("./common");
  *                 $ref: '#/components/schemas/Product'
  */
 router.get(["/_trash", "/_trash/:id"], async (req, res, nxt) => {
+  const log = req.log;
   const { id } = req.params;
   if (id) {
-    console.log(`GET /products/_trash/${id}`);
+    log(`GET /products/_trash/${id}`);
     const product = await Product.get.Trash.ById(id);
     res.status(200).json(await returnVisible(product));
   } else {
-    console.log("GET /products/_trash");
+    log("GET /products/_trash");
     const products = await Product.get.Trash.All();
     res.status(200).json(await returnVisibles(products));
   }
@@ -156,9 +157,10 @@ router.get(["/_trash", "/_trash/:id"], async (req, res, nxt) => {
  *                   type: object
  */
 router.get("/_id/:id", async (req, res, nxt) => {
+  const log = req.log;
   const { id } = req.params;
   if (id) {
-    console.log(`GET /products/_id/${id}`);
+    log(`GET /products/_id/${id}`);
     res
       .status(200)
       .json({ data: await returnVisible(await Product.get.ById(id)) });
@@ -194,8 +196,9 @@ router.get("/_id/:id", async (req, res, nxt) => {
  *                 $ref: '#/components/schemas/Product'
  */
 router.get("/:format", async (req, res, nxt) => {
+  const log = req.log;
   const { format } = req.params;
-  console.log(`GET /products/${format}`);
+  log(`GET /products/${format}`);
   const products = await Product.get.Where({ format });
   const result = await returnVisibles(products);
   res.status(200).json({ products: result });
@@ -221,7 +224,8 @@ router.get("/:format", async (req, res, nxt) => {
  *                 $ref: '#/components/schemas/Product'
  */
 router.get("/", async (req, res, nxt) => {
-  console.log(`GET /products`);
+  const log = req.log;
+  log(`GET /products`);
   const products = await Product.get.All();
   const result = await returnVisibles(products);
   res.status(200).json({ products: result });
@@ -250,7 +254,8 @@ router.get("/", async (req, res, nxt) => {
  *               type: array
  */
 router.post("/", async (req, res, nxt) => {
-  console.log("POST /products/");
+  const log = req.log;  
+  log("POST /products/");
   const result = await Product.post.Create(req.body);
   const status = !result?.error ? 201 : 400;
   res.status(status).json(result);
@@ -282,10 +287,11 @@ router.post("/", async (req, res, nxt) => {
  *         description: Updated
  */
 router.put("/_id/:id", async (req, res, nxt) => {
+  const log = req.log;
   const { id } = req.params;
   const number_of_changes = Object.keys(req.body).length;
   if (id && number_of_changes > 0) {
-    console.log(`PUT /products/_id/${id}`);
+    log(`PUT /products/_id/${id}`);
     const result = await Product.put.Update(id, req.body);
     res.status(200).json(result);
   } else {
@@ -314,10 +320,11 @@ router.put("/_id/:id", async (req, res, nxt) => {
  *         description: Updated
  */
 router.put("/_trash/:id", async (req, res, nxt) => {
+  const log = req.log;
   const { id } = req.params;
   if (id) {
     const result = await Product.put.Trash(id);
-    console.log("RESULT", result);
+    log("RESULT", result);
     res.status(200).json(result);
   } else {
     res.status(422).send("id ?");
@@ -345,11 +352,12 @@ router.put("/_trash/:id", async (req, res, nxt) => {
  *         description: Updated
  */
 router.put("/_restore/:id", async (req, res, nxt) => {
+  const log = req.log;
   const { id } = req.params;
-  console.log("restore", id);
+  log("restore", id);
   if (id) {
     const result = await Product.put.Restore(id);
-    console.log("RESULT", result);
+    req.logit("RESULT", result);
     res.status(200).json(result);
   } else {
     res.status(422).send("id ?");
@@ -386,9 +394,10 @@ router.put("/_restore/:id", async (req, res, nxt) => {
  *         description: Product deleted
  */
 router.delete(["/_trash", "/_trash/:id"], async (req, res, nxt) => {
+  const log = req.log;
   const { id } = req.params;
   const result = await Product.delete.Trash(id);
-  console.log("DELETE ", result);
+  log("DELETE ", result);
   res.status(200).json(result);
 });
 

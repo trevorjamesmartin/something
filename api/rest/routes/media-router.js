@@ -1,5 +1,3 @@
-const path = require("path");
-
 const { Router } = require("express");
 const Media = require("./media-model");
 const router = Router();
@@ -56,10 +54,12 @@ const { returnOnlyList, returnOnly, upload, BASEURL, PUBLIC } = require("./commo
  *                   type: object
  */
 router.get("/_name/:name", async (req, res, nxt) => {
+  const log = req.log;
   if (!req.params?.name) {
     res.status(422).send("name ?");
     return
   }
+  log(`GET /media/${req.params.name}`);
   const record = await Media.get.ByName(req.params.name);
   let image = {path: null};
   image = await returnOnly(record, [
@@ -101,7 +101,8 @@ router.get("/_name/:name", async (req, res, nxt) => {
  *                 $ref: '#/components/schemas/Media'
  */
 router.get("/", async (req, res, nxt) => {
-  console.log(`GET /media`);
+  const log = req.log;
+  log(`GET /media`);
   const media = await Media.get.All();
   const visible = await returnOnlyList(media, ["path", "description", "size", "name"]);
   const result = visible
@@ -149,7 +150,8 @@ router.get("/", async (req, res, nxt) => {
  *               type: array
  */
 router.post("/", upload.single("data"), async (req, res, nxt) => {
-  console.log("POST /media/");
+  const log = req.log;
+  log("POST /media/");
   const { filename, description } = req.body;
   const filedata = { ...req.file };
   delete filedata["fieldname"];
