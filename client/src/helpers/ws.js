@@ -1,73 +1,101 @@
 import updateChat, {
-  updateChatNames,
   connectionClosed,
   connectionOpened,
+  addUserNamed,
+  removeUser,
+  updateChatHistory,
 } from "./state";
 
 function connectWebSocket() {
-  return new WebSocket(`${window.location.href.startsWith("https") ? "wss" : "ws"}://${window.location.host}/ws`);
+  return new WebSocket(
+    process.env.NODE_ENV === "development"
+      ? "ws://localhost:8080/ws"
+      : `${window.location.href.startsWith("https") ? "wss" : "ws"}://${
+          window.location.host
+        }/ws`
+  );
 }
 
 const ws = connectWebSocket();
 
 /**
+ * construct object from portable JSON
  *
- * @param {URLSearchParams} params
- * @returns {Object} jsonObj
+ * @param {URLSearchParams} portable JSON
+ * @returns object
  */
-function unLoadSearchParams(params) {
-  const keys = params.get("keys").split(",");
+export function loadPortable(usp) {
+  let params = new URLSearchParams(usp);
+  let keys = params.get("keys").split(",");
   const jsonObj = {};
-  keys.forEach((keyName) => (jsonObj[keyName] = params.get(keyName)));
+  keys.forEach((keyName) => {
+    let value = params.get(keyName);
+    if (value?.startsWith(".OK.")) {
+      value = value.slice(4); // remove the extra bit
+    }
+    let encodingType = value.slice(2, 13); // expandable
+    switch (encodingType) {
+      case "JSON.string":
+        jsonObj[keyName] = JSON.parse(JSON.parse(value)["JSON.string"]);
+        break;
+      // ** future types **
+      default:
+        jsonObj[keyName] = value;
+        break;
+    }
+  });
   return jsonObj;
 }
 
-function intoStorage(jsonObj) {
-  try {
-    Object.keys(jsonObj).forEach((keyName) =>
-      localStorage.setItem(keyName, jsonObj[keyName])
-    );
-  } catch (error) {
-    console.log(error.message);
-  }
-}
+// function intoStorage(jsonObj) {
+//   try {
+//     Object.keys(jsonObj).forEach((keyName) =>
+//       localStorage.setItem(keyName, jsonObj[keyName])
+//     );
+//   } catch (error) {
+//     console.log(error.message);
+//   }
+// }
 
 // connection opened
 ws.addEventListener("open", function (event) {
   // connection opened, shake hands
   const params = new URLSearchParams();
   params.set("foo", "yo");
-  // if an old session exists, send it
   const oldSession = localStorage.getItem("session");
   const oldName = localStorage.getItem("name");
   params.set("session", oldSession);
   params.set("name", oldName);
-  console.log("reply, ", params.toString());
   ws.send(`?${params.toString()}`);
   connectionOpened();
 });
 
-// PING
 ws.addEventListener("ping", () => ws.send("pong"));
 
-// CLOSE
 ws.addEventListener("close", () => connectionClosed);
 
-// listen for messages
 ws.addEventListener("message", async function (event) {
   const params = new URLSearchParams(event.data);
   switch (params.get("foo")) {
+    case "status":
+      console.log("[status] ", params.get("name"), params.get("data"));
+      break;
+    case "@joins":
+      addUserNamed(loadPortable(params));
+      break;
+    case "@leaves":
+      let { id, name } = loadPortable(params.toString());
+      console.log(name, "has left the chatroom");
+      removeUser({ id });
+      break;
     case "chat":
       await updateChat(params);
       break;
-    case "userlist":
-      console.log("received a list of nicknames");
-      updateChatNames(params);
-      break;
-    case "yo":
-      const ok = unLoadSearchParams(params);
-      delete ok["foo"];
-      intoStorage(ok); // save for next session
+    case "yo?":
+      const sent = loadPortable(event.data);
+      const chatlog = typeof sent?.chatlog !== "string" ? sent.chatlog : [];
+      const users = sent?.users || [];
+      await updateChatHistory({ chatlog, users });
       break;
     default:
       break;
