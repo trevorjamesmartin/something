@@ -1,16 +1,8 @@
 module.exports = {
   portable,
   loadPortable,
-  redString
 };
 
-function redString({ name, message}) {
-  const params = new URLSearchParams();
-  params.set("foo", "chat");
-  params.set("name", name);
-  params.set("data", message);
-  return params
-}
 
 /**
  * transport 1d JSON
