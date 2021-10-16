@@ -1,12 +1,24 @@
+# networks:
+#   backend:
 services:
   web:
     image: something-webbed
     build: .
     ports:
-      - "420:420"
+      - "80:80"
     environment:
       - API_URL=https://localhost/api
-      - CONTAINER_PORT=420
+      - CONTAINER_PORT=80
+      # - REDIS_HOST=redis
     volumes:
       - ./mnt:/app/mnt
       - ./mnt/upload:/app/api/rest/public/images
+    # networks:
+    #   - backend
+  # redis:
+  #   container_name: redis-cache
+  #   image: redis
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - backend
