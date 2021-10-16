@@ -252,7 +252,7 @@ wss.on("connection", function connection(ws, req, client) {
           async function (session, id, reply) {
             log(reply);
             joinsChannel({ name: alias, option, id });
-            if (cache?.isConnected()) {
+            if (cache?.isConnected() && option !== "changed-name") {
               // create a subscriber
               let s = await cache.createSubscription(
                 CHAT_CHANNEL,
