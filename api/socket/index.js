@@ -88,7 +88,7 @@ function addSubscriber(clientKey, subscriber) {
 async function leavesChannel({ ip, key, session, id, name }) {
   let msg = portable({ foo: "@leaves", name, id }).toString();
   let c = removeClient(key);
-  cache && c?.subscriber.quit(); // unsubscribe
+  cache && c?.subscriber?.quit(); // unsubscribe
   wss.clients.forEach(function each(wsClient) {
     if (wsClient.readyState === OPEN && wsClient.session) {
       wsClient.send(msg, { binary: false });
