@@ -174,7 +174,7 @@ const pulseCheck = setInterval(function ping() {
       if (cache) {
         clients
           .find((client) => client.key === ws?.clientKey)
-          ?.subscriber.quit(); // unsubscribe if cache was enabled.
+          ?.subscriber?.quit(); // unsubscribe if cache was enabled.
       }
       clients = clients.filter((c) => c.clientKey !== ws.clientKey);
       removed += 1;
